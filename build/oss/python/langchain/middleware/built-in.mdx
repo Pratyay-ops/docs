@@ -45,7 +45,7 @@ from langchain.agents.middleware import SummarizationMiddleware
 
 agent = create_agent(
     model="gpt-4o",
-    tools=[weather_tool, calculator_tool],
+    tools=[your_weather_tool, your_calculator_tool],
     middleware=[
         SummarizationMiddleware(
             model="gpt-4o-mini",
@@ -62,39 +62,48 @@ agent = create_agent(
 <Accordion title="Configuration options">
 
 <Tip>
-The `fraction` conditions for `trigger` and `keep` (shown below) rely on a chat model's [profile data](/oss/python/langchain/models#model-profiles) if using `langchain>=1.1`. If data are not available, use another condition or specify manually:
-```python
-custom_profile = {
-    "max_input_tokens": 100_000,
-    # ...
-}
-model = init_chat_model("...", profile=custom_profile)
-```
+    The `fraction` conditions for `trigger` and `keep` (shown below) rely on a chat model's [profile data](/oss/python/langchain/models#model-profiles) if using `langchain>=1.1`. If data are not available, use another condition or specify manually:
+
+    ```python
+    from langchain.chat_models import init_chat_model
+
+    custom_profile = {
+        "max_input_tokens": 100_000,
+        # ...
+    }
+    model = init_chat_model("gpt-4o", profile=custom_profile)
+    ```
 </Tip>
+
 <ParamField body="model" type="string | BaseChatModel" required>
     Model for generating summaries. Can be a model identifier string (e.g., `'openai:gpt-4o-mini'`) or a `BaseChatModel` instance. See [`init_chat_model`](https://reference.langchain.com/python/langchain/models/#langchain.chat_models.init_chat_model(model)) for more information.
 </ParamField>
 
-<ParamField body="trigger" type="dict | list[dict]">
+<ParamField body="trigger" type="ContextSize | list[ContextSize] | None">
     Conditions for triggering summarization. Can be:
 
-    - A single condition dict (all properties must be met - AND logic)
-    - A list of condition dicts (any condition must be met - OR logic)
+    - A single [`ContextSize`](https://reference.langchain.com/python/langchain/middleware/#langchain.agents.middleware.summarization.ContextSize) dict (all properties must be met - AND logic)
+    - A list of [`ContextSize`](https://reference.langchain.com/python/langchain/middleware/#langchain.agents.middleware.summarization.ContextSize) dicts (any condition must be met - OR logic)
 
     Each condition can include:
+
     - `fraction` (float): Fraction of model's context size (0-1)
     - `tokens` (int): Absolute token count
     - `messages` (int): Message count
 
     At least one property must be specified per condition. If not provided, summarization will not trigger automatically.
+
+    See the API reference for [`ContextSize`](https://reference.langchain.com/python/langchain/middleware/#langchain.agents.middleware.summarization.ContextSize) for more information.
 </ParamField>
 
-<ParamField body="keep" type="dict" default="{messages: 20}">
+<ParamField body="keep" type="ContextSize" default="{messages: 20}">
     How much context to preserve after summarization. Specify exactly one of:
 
     - `fraction` (float): Fraction of model's context size to keep (0-1)
     - `tokens` (int): Absolute token count to keep
     - `messages` (int): Number of recent messages to keep
+
+    See the API reference for [`ContextSize`](https://reference.langchain.com/python/langchain/middleware/#langchain.agents.middleware.summarization.ContextSize) for more information.
 </ParamField>
 
 <ParamField body="token_counter" type="function">
@@ -148,12 +157,12 @@ from langchain.agents.middleware import SummarizationMiddleware
 # Single condition: trigger if tokens >= 4000 AND messages >= 10
 agent = create_agent(
     model="gpt-4o",
-    tools=[weather_tool, calculator_tool],
+    tools=[your_weather_tool, your_calculator_tool],
     middleware=[
         SummarizationMiddleware(
             model="gpt-4o-mini",
-            trigger={"tokens": 4000, "messages": 10},
-            keep={"messages": 20},
+            trigger=[("tokens", 4000), ("messages", 10)],
+            keep=("messages", 20),
         ),
     ],
 )
@@ -161,15 +170,15 @@ agent = create_agent(
 # Multiple conditions
 agent2 = create_agent(
     model="gpt-4o",
-    tools=[weather_tool, calculator_tool],
+    tools=[your_weather_tool, your_calculator_tool],
     middleware=[
         SummarizationMiddleware(
             model="gpt-4o-mini",
             trigger=[
-                {"tokens": 5000, "messages": 3},
-                {"tokens": 3000, "messages": 6},
+                ("tokens", 3000),
+                ("messages", 6),
             ],
-            keep={"messages": 20},
+            keep=("messages", 20),
         ),
     ],
 )
@@ -177,12 +186,12 @@ agent2 = create_agent(
 # Using fractional limits
 agent3 = create_agent(
     model="gpt-4o",
-    tools=[weather_tool, calculator_tool],
+    tools=[your_weather_tool, your_calculator_tool],
     middleware=[
         SummarizationMiddleware(
             model="gpt-4o-mini",
-            trigger={"fraction": 0.8},
-            keep={"fraction": 0.3},
+            trigger=("fraction", 0.8),
+            keep=("fraction", 0.3),
         ),
     ],
 )
@@ -192,7 +201,6 @@ agent3 = create_agent(
 
 
 </Accordion>
-
 
 ### Human-in-the-loop
 
@@ -214,17 +222,26 @@ from langchain.agents import create_agent
 from langchain.agents.middleware import HumanInTheLoopMiddleware
 from langgraph.checkpoint.memory import InMemorySaver
 
+
+def read_email_tool(email_id: str) -> str:
+    """Mock function to read an email by its ID."""
+    return f"Email content for ID: {email_id}"
+
+def send_email_tool(recipient: str, subject: str, body: str) -> str:
+    """Mock function to send an email."""
+    return f"Email sent to {recipient} with subject '{subject}'"
+
 agent = create_agent(
     model="gpt-4o",
-    tools=[read_email_tool, send_email_tool],
+    tools=[your_read_email_tool, your_send_email_tool],
     checkpointer=InMemorySaver(),
     middleware=[
         HumanInTheLoopMiddleware(
             interrupt_on={
-                "send_email_tool": {
+                "your_send_email_tool": {
                     "allowed_decisions": ["approve", "edit", "reject"],
                 },
-                "read_email_tool": False,
+                "your_read_email_tool": False,
             }
         ),
     ],
@@ -254,7 +271,7 @@ from langchain.agents.middleware import ModelCallLimitMiddleware
 
 agent = create_agent(
     model="gpt-4o",
-    tools=[...],
+    tools=[],
     middleware=[
         ModelCallLimitMiddleware(
             thread_limit=10,
@@ -401,7 +418,7 @@ from langchain.agents.middleware import ModelFallbackMiddleware
 
 agent = create_agent(
     model="gpt-4o",
-    tools=[...],
+    tools=[],
     middleware=[
         ModelFallbackMiddleware(
             "gpt-4o-mini",
@@ -429,7 +446,6 @@ agent = create_agent(
 
 </Accordion>
 
-
 ### PII detection
 
 Detect and handle Personally Identifiable Information (PII) in conversations using configurable strategies. PII detection is useful for the following:
@@ -446,7 +462,7 @@ from langchain.agents.middleware import PIIMiddleware
 
 agent = create_agent(
     model="gpt-4o",
-    tools=[...],
+    tools=[],
     middleware=[
         PIIMiddleware("email", strategy="redact", apply_to_input=True),
         PIIMiddleware("credit_card", strategy="mask", apply_to_input=True),
@@ -476,7 +492,7 @@ import re
 # Method 1: Regex pattern string
 agent1 = create_agent(
     model="gpt-4o",
-    tools=[...],
+    tools=[],
     middleware=[
         PIIMiddleware(
             "api_key",
@@ -489,7 +505,7 @@ agent1 = create_agent(
 # Method 2: Compiled regex pattern
 agent2 = create_agent(
     model="gpt-4o",
-    tools=[...],
+    tools=[],
     middleware=[
         PIIMiddleware(
             "phone_number",
@@ -522,7 +538,7 @@ def detect_ssn(content: str) -> list[dict[str, str | int]]:
 
 agent3 = create_agent(
     model="gpt-4o",
-    tools=[...],
+    tools=[],
     middleware=[
         PIIMiddleware(
             "ssn",
@@ -552,12 +568,12 @@ def detector(content: str) -> list[dict[str, str | int]]:
 
 
 <Tip>
-For custom detectors:
+    For custom detectors:
 
-- Use regex strings for simple patterns
-- Use RegExp objects when you need flags (e.g., case-insensitive matching)
-- Use custom functions when you need validation logic beyond pattern matching
-- Custom functions give you full control over detection logic and can implement complex validation rules
+    - Use regex strings for simple patterns
+    - Use RegExp objects when you need flags (e.g., case-insensitive matching)
+    - Use custom functions when you need validation logic beyond pattern matching
+    - Custom functions give you full control over detection logic and can implement complex validation rules
 </Tip>
 
 <Accordion title="Configuration options">
@@ -804,7 +820,7 @@ agent = create_agent(
             jitter=True,
             tools=["api_tool"],
             retry_on=(ConnectionError, TimeoutError),
-            on_failure="return_message",
+            on_failure="continue",
         ),
     ],
 )
@@ -814,7 +830,6 @@ agent = create_agent(
 
 
 </Accordion>
-
 
 ### Model retry
 
@@ -965,7 +980,6 @@ strict_retry = ModelRetryMiddleware(
 
 </Accordion>
 
-
 ### LLM tool emulator
 
 Emulate tool execution using an LLM for testing purposes, replacing actual tool calls with AI-generated responses. LLM tool emulators are useful for the following:
@@ -1046,7 +1060,7 @@ agent2 = create_agent(
 agent4 = create_agent(
     model="gpt-4o",
     tools=[get_weather, send_email],
-    middleware=[LLMToolEmulator(model="anthropic:claude-sonnet-4-5-20250929")],
+    middleware=[LLMToolEmulator(model="claude-sonnet-4-5-20250929")],
 )
 ```
 
@@ -1071,7 +1085,7 @@ from langchain.agents.middleware import ContextEditingMiddleware, ClearToolUsesE
 
 agent = create_agent(
     model="gpt-4o",
-    tools=[...],
+    tools=[],
     middleware=[
         ContextEditingMiddleware(
             edits=[
@@ -1146,7 +1160,7 @@ from langchain.agents.middleware import ContextEditingMiddleware, ClearToolUsesE
 
 agent = create_agent(
     model="gpt-4o",
-    tools=[search_tool, calculator_tool, database_tool],
+    tools=[search_tool, your_calculator_tool, database_tool],
     middleware=[
         ContextEditingMiddleware(
             edits=[
@@ -1167,7 +1181,6 @@ agent = create_agent(
 
 
 </Accordion>
-
 
 ### Shell tool
 
@@ -1310,7 +1323,6 @@ agent_redacted = create_agent(
 ```
 
 </Accordion>
-
 
 ### File search
 

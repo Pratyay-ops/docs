@@ -59,17 +59,18 @@ const agent = createAgent({
 
 
 <Tip>
-The `fraction` conditions for `trigger` and `keep` (shown below) rely on a chat model's [profile data](/oss/javascript/langchain/models#model-profiles) if using `langchain@1.1.0`. If data are not available, use another condition or specify manually:
-```typescript
-const customProfile: ModelProfile = {
-    maxInputTokens: 100_000,
-    // ...
-}
-model = await initChatModel("...", {
-    profile: customProfile,
-});
-```
+    The `fraction` conditions for `trigger` and `keep` (shown below) rely on a chat model's [profile data](/oss/javascript/langchain/models#model-profiles) if using `langchain@1.1.0`. If data are not available, use another condition or specify manually:
+    ```typescript
+    const customProfile: ModelProfile = {
+        maxInputTokens: 100_000,
+        // ...
+    }
+    model = await initChatModel("...", {
+        profile: customProfile,
+    });
+    ```
 </Tip>
+
 <ParamField body="model" type="string | BaseChatModel" required>
     Model for generating summaries. Can be a model identifier string (e.g., `'openai:gpt-4o-mini'`) or a `BaseChatModel` instance.
 </ParamField>
@@ -163,7 +164,6 @@ const agent2 = createAgent({
     summarizationMiddleware({
       model: "gpt-4o-mini",
       trigger: [
-        { tokens: 5000, messages: 3 },
         { tokens: 3000, messages: 6 },
       ],
       keep: { messages: 20 },
@@ -188,7 +188,6 @@ const agent3 = createAgent({
 
 </Accordion>
 
-
 ### Human-in-the-loop
 
 Pause agent execution for human approval, editing, or rejection of tool calls before they execute. [Human-in-the-loop](/oss/javascript/langchain/human-in-the-loop) is useful for the following:
@@ -208,18 +207,28 @@ Pause agent execution for human approval, editing, or rejection of tool calls be
 ```typescript
 import { createAgent, humanInTheLoopMiddleware } from "langchain";
 
+function readEmailTool(emailId: string): string {
+  /** Mock function to read an email by its ID. */
+  return `Email content for ID: ${emailId}`;
+}
+
+function sendEmailTool(recipient: string, subject: string, body: string): string {
+  /** Mock function to send an email. */
+  return `Email sent to ${recipient} with subject '${subject}'`;
+}
+
 const agent = createAgent({
   model: "gpt-4o",
   tools: [readEmailTool, sendEmailTool],
   middleware: [
     humanInTheLoopMiddleware({
       interruptOn: {
-        send_email: {
+        sendEmailTool: {
           allowAccept: true,
           allowEdit: true,
           allowRespond: true,
         },
-        read_email: false,
+        readEmailTool: false,
       }
     })
   ]
@@ -246,7 +255,7 @@ import { createAgent, modelCallLimitMiddleware } from "langchain";
 
 const agent = createAgent({
   model: "gpt-4o",
-  tools: [...],
+  tools: [],
   middleware: [
     modelCallLimitMiddleware({
       threadLimit: 10,
@@ -383,7 +392,7 @@ import { createAgent, modelFallbackMiddleware } from "langchain";
 
 const agent = createAgent({
   model: "gpt-4o",
-  tools: [...],
+  tools: [],
   middleware: [
     modelFallbackMiddleware(
       "gpt-4o-mini",
@@ -415,7 +424,6 @@ The middleware accepts a variable number of string arguments representing fallba
 
 </Accordion>
 
-
 ### PII detection
 
 Detect and handle Personally Identifiable Information (PII) in conversations using configurable strategies. PII detection is useful for the following:
@@ -431,7 +439,7 @@ import { createAgent, piiMiddleware } from "langchain";
 
 const agent = createAgent({
   model: "gpt-4o",
-  tools: [...],
+  tools: [],
   middleware: [
     piiMiddleware("email", { strategy: "redact", applyToInput: true }),
     piiMiddleware("credit_card", { strategy: "mask", applyToInput: true }),
@@ -459,7 +467,7 @@ import { createAgent, piiMiddleware, type PIIMatch } from "langchain";
 // Method 1: Regex pattern string
 const agent1 = createAgent({
   model: "gpt-4o",
-  tools: [...],
+  tools: [],
   middleware: [
     piiMiddleware("api_key", {
       detector: "sk-[a-zA-Z0-9]{32}",
@@ -471,7 +479,7 @@ const agent1 = createAgent({
 // Method 2: RegExp object
 const agent2 = createAgent({
   model: "gpt-4o",
-  tools: [...],
+  tools: [],
   middleware: [
     piiMiddleware("phone_number", {
       detector: /\+?\d{1,3}[\s.-]?\d{3,4}[\s.-]?\d{4}/,
@@ -503,7 +511,7 @@ function detectSSN(content: string): PIIMatch[] {
 
 const agent3 = createAgent({
   model: "gpt-4o",
-  tools: [...],
+  tools: [],
   middleware: [
     piiMiddleware("ssn", {
       detector: detectSSN,
@@ -537,12 +545,12 @@ function detector(content: string): PIIMatch[] {
 
 
 <Tip>
-For custom detectors:
+    For custom detectors:
 
-- Use regex strings for simple patterns
-- Use RegExp objects when you need flags (e.g., case-insensitive matching)
-- Use custom functions when you need validation logic beyond pattern matching
-- Custom functions give you full control over detection logic and can implement complex validation rules
+    - Use regex strings for simple patterns
+    - Use RegExp objects when you need flags (e.g., case-insensitive matching)
+    - Use custom functions when you need validation logic beyond pattern matching
+    - Custom functions give you full control over detection logic and can implement complex validation rules
 </Tip>
 
 <Accordion title="Configuration options">
@@ -846,7 +854,6 @@ const strictRetry = toolRetryMiddleware({
 
 </Accordion>
 
-
 ### Model retry
 
 Automatically retry failed model calls with configurable exponential backoff. Model retry is useful for the following:
@@ -995,7 +1002,6 @@ const strictRetry = modelRetryMiddleware({
 
 </Accordion>
 
-
 ### LLM tool emulator
 
 Emulate tool execution using an LLM for testing purposes, replacing actual tool calls with AI-generated responses. LLM tool emulators are useful for the following:
@@ -1101,7 +1107,7 @@ const agent5 = createAgent({
   tools: [getWeather, sendEmail],
   middleware: [
     toolEmulatorMiddleware({
-      model: "anthropic:claude-sonnet-4-5-20250929",
+      model: "claude-sonnet-4-5-20250929",
     }),
   ],
 });
@@ -1125,7 +1131,7 @@ import { createAgent, contextEditingMiddleware, ClearToolUsesEdit } from "langch
 
 const agent = createAgent({
   model: "gpt-4o",
-  tools: [...],
+  tools: [],
   middleware: [
     contextEditingMiddleware({
       edits: [
@@ -1213,7 +1219,6 @@ const agent = createAgent({
 
 
 </Accordion>
-
 
 
 
