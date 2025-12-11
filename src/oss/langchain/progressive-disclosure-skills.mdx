@@ -343,7 +343,7 @@ This guide demonstrates creating custom middleware. For a comprehensive guide on
 
 ```python
 from langchain.agents.middleware import ModelRequest, ModelResponse, AgentMiddleware
-from langchain_core.messages import SystemMessage
+from langchain.messages import SystemMessage
 from typing import Callable
 
 class SkillMiddleware(AgentMiddleware):  # [!code highlight]
@@ -542,7 +542,7 @@ Modify the `load_skill` tool to update state when a skill is loaded:
 ```python
 from langgraph.types import Command  # [!code highlight]
 from langchain.tools import tool, ToolRuntime
-from langchain_core.messages import ToolMessage  # [!code highlight]
+from langchain.messages import ToolMessage  # [!code highlight]
 
 @tool
 def load_skill(skill_name: str, runtime: ToolRuntime) -> Command:  # [!code highlight]
@@ -670,7 +670,7 @@ from typing import TypedDict, NotRequired
 from langchain.tools import tool
 from langchain.agents import create_agent
 from langchain.agents.middleware import ModelRequest, ModelResponse, AgentMiddleware
-from langchain_core.messages import SystemMessage
+from langchain.messages import SystemMessage
 from langgraph.checkpoint.memory import InMemorySaver
 from typing import Callable
 
