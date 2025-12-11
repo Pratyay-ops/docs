@@ -120,7 +120,7 @@ The key to handoffs is using `Command` to update state, including the `current_s
 
 ```python
 from langchain.tools import tool, ToolRuntime
-from langchain_core.messages import ToolMessage
+from langchain.messages import ToolMessage
 from langgraph.types import Command
 
 @tool
@@ -330,7 +330,7 @@ agent = create_agent(
 Test the complete handoff workflow:
 
 ```python
-from langchain_core.messages import HumanMessage
+from langchain.messages import HumanMessage
 
 # Configuration for this conversation thread
 config = {"configurable": {"thread_id": "support-001"}}
@@ -587,7 +587,7 @@ from langchain.agents.middleware import before_model, wrap_model_call, ModelRequ
 from langchain.chat_models import init_chat_model
 from langchain.messages import HumanMessage, RemoveMessage
 from langchain.tools import tool, ToolRuntime
-from langchain_core.messages import ToolMessage
+from langchain.messages import ToolMessage
 
 model = init_chat_model("anthropic:claude-3-5-sonnet-latest")
 
