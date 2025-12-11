@@ -429,57 +429,66 @@ Use the workflow pattern when you have a **fixed sequence** of processing steps,
 
     ### Example
 
-    A document processing pipeline with three types of nodes: a plain function (no agent), a plain agent, and an agent with tools:
+    This example builds a document processing pipeline that extracts text from a document, summarizes it, and translates the summary. The workflow uses **custom state** to pass structured data between nodes rather than relying solely on messages.
+
+    The pipeline demonstrates three node types:
+    - **Plain function**: Deterministic text extraction (no LLM)
+    - **Agent node**: LLM-powered summarization
+    - **Agent with tools**: Translation with language detection
+
+    Using custom state fields (like `extracted_text` and `summary`) keeps each stage's output cleanly separated and makes debugging easier.
 
     :::python
     ```python
-    from langgraph.graph import StateGraph, MessagesState, START, END
+    from typing import TypedDict
+    from langgraph.graph import StateGraph, START, END
     from langchain.agents import create_agent
-    from langchain.tools import tool
 
-    # Tool for the translation agent
-    @tool
-    def detect_language(text: str) -> str:
-        """Detect the language of the input text."""
-        # Implementation would use a language detection library
-        return "en"
+    # Custom state with dedicated fields for each processing stage
+    class DocumentState(TypedDict):
+        document: str           # Raw input document
+        extracted_text: str     # Output from extraction
+        summary: str            # Output from summarization
+        translation: str        # Final translated output
 
-    # Plain function node (no agent) - extracts text from document
-    def extract_text(state: MessagesState) -> dict:
+    # Plain function node - extracts text from document
+    def extract_text(state: DocumentState) -> dict:
         """Extract text content from a document."""
         # In practice, this would parse PDFs, images, etc.
-        user_message = state["messages"][-1].content
-        extracted = f"Extracted content: {user_message}"
-        return {"messages": [{"role": "assistant", "content": extracted}]}
+        raw = state["document"]
+        return {"extracted_text": f"[Extracted from document]: {raw}"}
 
-    # Plain agent node - summarizes content
+    # Agent node - summarizes extracted content
     summarize_agent = create_agent(
         model="openai:gpt-4o",
-        prompt="Summarize the extracted document content concisely.",
+        prompt="Summarize the following text concisely.",
         name="summarizer"
     )
 
-    def summarize(state: MessagesState) -> dict:
-        """Summarize the extracted content."""
-        result = summarize_agent.invoke(state)
-        return {"messages": result["messages"]}
+    def summarize(state: DocumentState) -> dict:
+        """Summarize the extracted content using the agent."""
+        result = summarize_agent.invoke({
+            "messages": [{"role": "user", "content": state["extracted_text"]}]
+        })
+        return {"summary": result["messages"][-1].content}
 
-    # Agent with tools node - translates content
+    # Agent node - translates the summary
     translate_agent = create_agent(
         model="openai:gpt-4o",
-        tools=[detect_language],
-        prompt="Translate the summary to Spanish. Use detect_language if needed.",
+        prompt="Translate the following text to Spanish.",
         name="translator"
     )
 
-    def translate(state: MessagesState) -> dict:
+    def translate(state: DocumentState) -> dict:
         """Translate the summary."""
-        result = translate_agent.invoke(state)
-        return {"messages": result["messages"]}
+        result = translate_agent.invoke({
+            "messages": [{"role": "user", "content": state["summary"]}]
+        })
+        return {"translation": result["messages"][-1].content}
 
-    # Define sequential workflow
+    # Build the sequential workflow
     workflow = (
-        StateGraph(MessagesState)
+        StateGraph(DocumentState)
         .add_node("extract", extract_text)
         .add_node("summarize", summarize)
         .add_node("translate", translate)
@@ -490,65 +499,60 @@ Use the workflow pattern when you have a **fixed sequence** of processing steps,
         .compile()
     )
 
-    result = workflow.invoke({
-        "messages": [{"role": "user", "content": "Process this document about AI agents..."}]
-    })
+    result = workflow.invoke({"document": "Long document about AI agents..."})
+    print(result["translation"])  # Access the final translated summary
     ```
     :::
     :::js
     ```typescript
-    import { StateGraph, MessagesAnnotation, START, END } from "@langchain/langgraph";
-    import { createAgent, tool } from "langchain";
-    import * as z from "zod";
+    import { StateGraph, Annotation, START, END } from "@langchain/langgraph";
+    import { createAgent } from "langchain";
 
-    // Tool for the translation agent
-    const detectLanguage = tool(
-      async ({ text }) => {
-        // Implementation would use a language detection library
-        return "en";
-      },
-      {
-        name: "detect_language",
-        description: "Detect the language of the input text.",
-        schema: z.object({ text: z.string() })
-      }
-    );
+    // Custom state with dedicated fields for each processing stage
+    const DocumentState = Annotation.Root({
+      document: Annotation<string>(),        // Raw input document
+      extractedText: Annotation<string>(),   // Output from extraction
+      summary: Annotation<string>(),         // Output from summarization
+      translation: Annotation<string>()      // Final translated output
+    });
 
-    // Plain function node (no agent) - extracts text from document
-    function extractText(state: typeof MessagesAnnotation.State) {
+    // Plain function node - extracts text from document
+    function extractText(state: typeof DocumentState.State) {
       // In practice, this would parse PDFs, images, etc.
-      const userMessage = state.messages.at(-1)?.content;
-      const extracted = `Extracted content: ${userMessage}`;
-      return { messages: [{ role: "assistant", content: extracted }] };
+      const raw = state.document;
+      return { extractedText: `[Extracted from document]: ${raw}` };
     }
 
-    // Plain agent - summarizes content
+    // Agent node - summarizes extracted content
     const summarizeAgent = createAgent({
       model: "openai:gpt-4o",
-      prompt: "Summarize the extracted document content concisely.",
+      prompt: "Summarize the following text concisely.",
       name: "summarizer"
     });
 
-    async function summarize(state: typeof MessagesAnnotation.State) {
-      const result = await summarizeAgent.invoke(state);
-      return { messages: result.messages };
+    async function summarize(state: typeof DocumentState.State) {
+      const result = await summarizeAgent.invoke({
+        messages: [{ role: "user", content: state.extractedText }]
+      });
+      return { summary: result.messages.at(-1)?.content };
     }
 
-    // Agent with tools - translates content
+    // Agent node - translates the summary
     const translateAgent = createAgent({
       model: "openai:gpt-4o",
-      tools: [detectLanguage],
-      prompt: "Translate the summary to Spanish. Use detect_language if needed.",
+      prompt: "Translate the following text to Spanish.",
       name: "translator"
     });
 
-    async function translate(state: typeof MessagesAnnotation.State) {
-      const result = await translateAgent.invoke(state);
-      return { messages: result.messages };
+    async function translate(state: typeof DocumentState.State) {
+      const result = await translateAgent.invoke({
+        messages: [{ role: "user", content: state.summary }]
+      });
+      return { translation: result.messages.at(-1)?.content };
     }
 
-    // Define sequential workflow
-    const workflow = new StateGraph(MessagesAnnotation)
+    // Build the sequential workflow
+    const workflow = new StateGraph(DocumentState)
       .addNode("extract", extractText)
       .addNode("summarize", summarize)
       .addNode("translate", translate)
@@ -558,9 +562,8 @@ Use the workflow pattern when you have a **fixed sequence** of processing steps,
       .addEdge("translate", END)
       .compile();
 
-    const result = await workflow.invoke({
-      messages: [{ role: "user", content: "Process this document about AI agents..." }]
-    });
+    const result = await workflow.invoke({ document: "Long document about AI agents..." });
+    console.log(result.translation);  // Access the final translated summary
     ```
     :::
   </Tab>
@@ -570,220 +573,197 @@ Use the workflow pattern when you have a **fixed sequence** of processing steps,
     ```mermaid
     graph LR
         A[User] --> R[Router]
-        R -->|langchain| B[LangChain expert]
-        R -->|langgraph| C[LangGraph expert]
-        R -->|deepagents| D[DeepAgents expert]
+        R -->|billing| B[Billing agent]
+        R -->|technical| C[Technical agent]
+        R -->|sales| D[Sales agent]
         B --> E[Result]
         C --> E
         D --> E
     ```
 
     Common examples:
-    - **Knowledge bases**: route questions to domain experts
     - **Support systems**: route to billing, technical, or sales specialists
+    - **Knowledge bases**: route questions to domain experts
 
     ### Example
 
-    A knowledge base router that directs questions to specialized agents for LangChain, LangGraph, and DeepAgents:
+    A customer support router that classifies incoming requests and directs them to specialized agents. This example uses an **LLM-based classifier** for more accurate routing than simple keyword matching, and stores the agent's response in a dedicated `answer` field.
 
     :::python
     ```python
-    from langgraph.graph import StateGraph, MessagesState, START, END
+    from typing import TypedDict, Literal
+    from langgraph.graph import StateGraph, START, END
     from langchain.agents import create_agent
-    from langchain.tools import tool
-    from typing import Literal
+    from langchain_openai import ChatOpenAI
 
-    # Tools for each specialist agent
-    @tool
-    def search_langchain_docs(query: str) -> str:
-        """Search LangChain documentation."""
-        return f"LangChain docs result for: {query}"
+    # Custom state with routing and answer fields
+    class SupportState(TypedDict):
+        question: str       # User's support request
+        route: str          # Classification result
+        answer: str         # Agent's response
 
-    @tool
-    def search_langgraph_docs(query: str) -> str:
-        """Search LangGraph documentation."""
-        return f"LangGraph docs result for: {query}"
-
-    @tool
-    def search_deepagents_docs(query: str) -> str:
-        """Search DeepAgents documentation."""
-        return f"DeepAgents docs result for: {query}"
-
-    # Create specialist agents
-    langchain_agent = create_agent(
+    # Specialist agents with domain-specific prompts
+    billing_agent = create_agent(
         model="openai:gpt-4o",
-        tools=[search_langchain_docs],
-        prompt="You are a LangChain expert. Answer questions about LangChain.",
-        name="langchain_expert"
+        prompt="You are a billing specialist. Help with invoices, payments, refunds, and subscription changes.",
+        name="billing"
     )
 
-    langgraph_agent = create_agent(
+    technical_agent = create_agent(
         model="openai:gpt-4o",
-        tools=[search_langgraph_docs],
-        prompt="You are a LangGraph expert. Answer questions about LangGraph.",
-        name="langgraph_expert"
+        prompt="You are a technical support specialist. Help with bugs, errors, integrations, and troubleshooting.",
+        name="technical"
     )
 
-    deepagents_agent = create_agent(
+    sales_agent = create_agent(
         model="openai:gpt-4o",
-        tools=[search_deepagents_docs],
-        prompt="You are a DeepAgents expert. Answer questions about DeepAgents.",
-        name="deepagents_expert"
+        prompt="You are a sales specialist. Help with pricing, plans, features, and enterprise inquiries.",
+        name="sales"
     )
 
-    # Router function that classifies the question
-    def router(state: MessagesState) -> dict:
-        """Classify which product the question is about."""
-        question = state["messages"][-1].content.lower()
-        if "langgraph" in question:
-            return {"route": "langgraph"}
-        elif "deepagents" in question or "deep agents" in question:
-            return {"route": "deepagents"}
-        else:
-            return {"route": "langchain"}  # Default to LangChain
+    # LLM-based router for accurate classification
+    router_llm = ChatOpenAI(model="gpt-4o-mini")
 
-    # Node functions that invoke agents
-    def call_langchain_agent(state: MessagesState) -> dict:
-        result = langchain_agent.invoke(state)
-        return {"messages": result["messages"]}
+    def classify_request(state: SupportState) -> dict:
+        """Use an LLM to classify the support request."""
+        response = router_llm.invoke([
+            {"role": "system", "content": "Classify this support request as 'billing', 'technical', or 'sales'. Reply with only one word."},
+            {"role": "user", "content": state["question"]}
+        ])
+        route = response.content.strip().lower()
+        if route not in ["billing", "technical", "sales"]:
+            route = "technical"
+        return {"route": route}
 
-    def call_langgraph_agent(state: MessagesState) -> dict:
-        result = langgraph_agent.invoke(state)
-        return {"messages": result["messages"]}
-
-    def call_deepagents_agent(state: MessagesState) -> dict:
-        result = deepagents_agent.invoke(state)
-        return {"messages": result["messages"]}
-
-    # Conditional edge function
-    def route_to_agent(state: dict) -> Literal["langchain", "langgraph", "deepagents"]:
+    def route_to_agent(state: SupportState) -> Literal["billing", "technical", "sales"]:
         return state["route"]
 
-    # Define router workflow
+    # Node functions for each specialist agent
+    def handle_billing(state: SupportState) -> dict:
+        result = billing_agent.invoke({
+            "messages": [{"role": "user", "content": state["question"]}]
+        })
+        return {"answer": result["messages"][-1].content}
+
+    def handle_technical(state: SupportState) -> dict:
+        result = technical_agent.invoke({
+            "messages": [{"role": "user", "content": state["question"]}]
+        })
+        return {"answer": result["messages"][-1].content}
+
+    def handle_sales(state: SupportState) -> dict:
+        result = sales_agent.invoke({
+            "messages": [{"role": "user", "content": state["question"]}]
+        })
+        return {"answer": result["messages"][-1].content}
+
+    # Build the router workflow
     workflow = (
-        StateGraph(MessagesState)
-        .add_node("router", router)
-        .add_node("langchain", call_langchain_agent)
-        .add_node("langgraph", call_langgraph_agent)
-        .add_node("deepagents", call_deepagents_agent)
-        .add_edge(START, "router")
-        .add_conditional_edges("router", route_to_agent)
-        .add_edge("langchain", END)
-        .add_edge("langgraph", END)
-        .add_edge("deepagents", END)
+        StateGraph(SupportState)
+        .add_node("classify", classify_request)
+        .add_node("billing", handle_billing)
+        .add_node("technical", handle_technical)
+        .add_node("sales", handle_sales)
+        .add_edge(START, "classify")
+        .add_conditional_edges("classify", route_to_agent)
+        .add_edge("billing", END)
+        .add_edge("technical", END)
+        .add_edge("sales", END)
         .compile()
     )
 
-    result = workflow.invoke({
-        "messages": [{"role": "user", "content": "How do I add memory to a LangGraph agent?"}]
-    })
+    result = workflow.invoke({"question": "I was charged twice for my subscription last month"})
+    print(result["answer"])  # Access the agent's response
     ```
     :::
     :::js
     ```typescript
-    import { StateGraph, MessagesAnnotation, START, END } from "@langchain/langgraph";
-    import { createAgent, tool } from "langchain";
-    import * as z from "zod";
+    import { StateGraph, Annotation, START, END } from "@langchain/langgraph";
+    import { createAgent } from "langchain";
+    import { ChatOpenAI } from "@langchain/openai";
 
-    // Tools for each specialist agent
-    const searchLangChainDocs = tool(
-      async ({ query }) => `LangChain docs result for: ${query}`,
-      {
-        name: "search_langchain_docs",
-        description: "Search LangChain documentation.",
-        schema: z.object({ query: z.string() })
-      }
-    );
-
-    const searchLangGraphDocs = tool(
-      async ({ query }) => `LangGraph docs result for: ${query}`,
-      {
-        name: "search_langgraph_docs",
-        description: "Search LangGraph documentation.",
-        schema: z.object({ query: z.string() })
-      }
-    );
-
-    const searchDeepAgentsDocs = tool(
-      async ({ query }) => `DeepAgents docs result for: ${query}`,
-      {
-        name: "search_deepagents_docs",
-        description: "Search DeepAgents documentation.",
-        schema: z.object({ query: z.string() })
-      }
-    );
-
-    // Create specialist agents
-    const langchainAgent = createAgent({
-      model: "openai:gpt-4o",
-      tools: [searchLangChainDocs],
-      prompt: "You are a LangChain expert. Answer questions about LangChain.",
-      name: "langchain_expert"
+    // Custom state with routing and answer fields
+    const SupportState = Annotation.Root({
+      question: Annotation<string>(),   // User's support request
+      route: Annotation<string>(),      // Classification result
+      answer: Annotation<string>()      // Agent's response
     });
 
-    const langgraphAgent = createAgent({
+    // Specialist agents with domain-specific prompts
+    const billingAgent = createAgent({
       model: "openai:gpt-4o",
-      tools: [searchLangGraphDocs],
-      prompt: "You are a LangGraph expert. Answer questions about LangGraph.",
-      name: "langgraph_expert"
+      prompt: "You are a billing specialist. Help with invoices, payments, refunds, and subscription changes.",
+      name: "billing"
     });
 
-    const deepagentsAgent = createAgent({
+    const technicalAgent = createAgent({
       model: "openai:gpt-4o",
-      tools: [searchDeepAgentsDocs],
-      prompt: "You are a DeepAgents expert. Answer questions about DeepAgents.",
-      name: "deepagents_expert"
+      prompt: "You are a technical support specialist. Help with bugs, errors, integrations, and troubleshooting.",
+      name: "technical"
     });
 
-    // Router function that classifies the question
-    function router(state: typeof MessagesAnnotation.State) {
-      const question = state.messages.at(-1)?.content?.toLowerCase() ?? "";
-      if (question.includes("langgraph")) {
-        return { route: "langgraph" };
-      } else if (question.includes("deepagents") || question.includes("deep agents")) {
-        return { route: "deepagents" };
-      } else {
-        return { route: "langchain" };  // Default to LangChain
+    const salesAgent = createAgent({
+      model: "openai:gpt-4o",
+      prompt: "You are a sales specialist. Help with pricing, plans, features, and enterprise inquiries.",
+      name: "sales"
+    });
+
+    // LLM-based router for accurate classification
+    const routerLlm = new ChatOpenAI({ model: "gpt-4o-mini" });
+
+    async function classifyRequest(state: typeof SupportState.State) {
+      const response = await routerLlm.invoke([
+        { role: "system", content: "Classify this support request as 'billing', 'technical', or 'sales'. Reply with only one word." },
+        { role: "user", content: state.question }
+      ]);
+      let route = response.content.toString().trim().toLowerCase();
+      if (!["billing", "technical", "sales"].includes(route)) {
+        route = "technical";
       }
+      return { route };
     }
 
-    // Node functions that invoke agents
-    async function callLangChainAgent(state: typeof MessagesAnnotation.State) {
-      const result = await langchainAgent.invoke(state);
-      return { messages: result.messages };
+    function routeToAgent(state: typeof SupportState.State): "billing" | "technical" | "sales" {
+      return state.route as "billing" | "technical" | "sales";
     }
 
-    async function callLangGraphAgent(state: typeof MessagesAnnotation.State) {
-      const result = await langgraphAgent.invoke(state);
-      return { messages: result.messages };
+    // Node functions for each specialist agent
+    async function handleBilling(state: typeof SupportState.State) {
+      const result = await billingAgent.invoke({
+        messages: [{ role: "user", content: state.question }]
+      });
+      return { answer: result.messages.at(-1)?.content };
     }
 
-    async function callDeepAgentsAgent(state: typeof MessagesAnnotation.State) {
-      const result = await deepagentsAgent.invoke(state);
-      return { messages: result.messages };
+    async function handleTechnical(state: typeof SupportState.State) {
+      const result = await technicalAgent.invoke({
+        messages: [{ role: "user", content: state.question }]
+      });
+      return { answer: result.messages.at(-1)?.content };
     }
 
-    // Conditional edge function
-    function routeToAgent(state: { route: string }): "langchain" | "langgraph" | "deepagents" {
-      return state.route as "langchain" | "langgraph" | "deepagents";
+    async function handleSales(state: typeof SupportState.State) {
+      const result = await salesAgent.invoke({
+        messages: [{ role: "user", content: state.question }]
+      });
+      return { answer: result.messages.at(-1)?.content };
     }
 
-    // Define router workflow
-    const workflow = new StateGraph(MessagesAnnotation)
-      .addNode("router", router)
-      .addNode("langchain", callLangChainAgent)
-      .addNode("langgraph", callLangGraphAgent)
-      .addNode("deepagents", callDeepAgentsAgent)
-      .addEdge(START, "router")
-      .addConditionalEdges("router", routeToAgent)
-      .addEdge("langchain", END)
-      .addEdge("langgraph", END)
-      .addEdge("deepagents", END)
+    // Build the router workflow
+    const workflow = new StateGraph(SupportState)
+      .addNode("classify", classifyRequest)
+      .addNode("billing", handleBilling)
+      .addNode("technical", handleTechnical)
+      .addNode("sales", handleSales)
+      .addEdge(START, "classify")
+      .addConditionalEdges("classify", routeToAgent)
+      .addEdge("billing", END)
+      .addEdge("technical", END)
+      .addEdge("sales", END)
       .compile();
 
-    const result = await workflow.invoke({
-      messages: [{ role: "user", content: "How do I add memory to a LangGraph agent?" }]
-    });
+    const result = await workflow.invoke({ question: "I was charged twice for my subscription last month" });
+    console.log(result.answer);  // Access the agent's response
     ```
     :::
   </Tab>
