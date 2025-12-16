@@ -8,9 +8,17 @@ Multi-agent systems break complex applications into coordinated components. **Im
 
 When developers say they need "multi-agent," they're usually looking for one or more of these capabilities:
 
-* **Context management**: Provide specialized knowledge without overwhelming the model's context window. If context were infinite and latency zero, you could dump all knowledge into a single prompt — but since it's not, you need patterns to selectively surface relevant information.
-* **Distributed development**: Allow different teams to develop and maintain capabilities independently, composing them into a larger system with clear boundaries and independent testing.
-* **Parallelization**: Spawn specialized workers for subtasks and execute them concurrently.
+<Columns cols={3}>
+  <Card title="Context management" icon="brain">
+    Surface relevant knowledge without overwhelming the context window. Different tasks need different context.
+  </Card>
+  <Card title="Distributed development" icon="users">
+    Let different teams develop and maintain capabilities independently with clear boundaries.
+  </Card>
+  <Card title="Parallelization" icon="arrows-split-up-and-left">
+    Spawn specialized workers for subtasks and execute them concurrently for faster results.
+  </Card>
+</Columns>
 
 Multi-agent patterns are particularly valuable when a single agent has too many [tools](/oss/langchain/tools) and makes poor decisions about which to use, when tasks require specialized knowledge with extensive context (long prompts and domain-specific tools), or when you need to enforce sequential constraints that unlock capabilities only after certain conditions are met.
 
