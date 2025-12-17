@@ -1,12 +1,12 @@
 ---
-title: Build a customer support agent using a state machine
-sidebarTitle: Customer support state machine
+title: Build customer support with handoffs
+sidebarTitle: "Handoffs: Customer support"
 ---
 
 import ChatModelTabsPy from '/snippets/chat-model-tabs.mdx';
 import ChatModelTabsJs from '/snippets/chat-model-tabs-js.mdx';
 
-The [state machine pattern](/oss/langchain/multi-agent#state-machine) describes workflows where an agent's behavior changes as it moves through different states of a task. This tutorial shows how to implement a state machine by using tool calls to dynamically change a single agent's configuration—updating its available tools and instructions based on the current state. The state can be determined from multiple sources: the agent's past actions (tool calls), external state (such as API call results), or even initial user input (for example, by running a classifier to determine user intent).
+The [state machine pattern](/oss/langchain/multi-agent/handoffs) describes workflows where an agent's behavior changes as it moves through different states of a task. This tutorial shows how to implement a state machine by using tool calls to dynamically change a single agent's configuration—updating its available tools and instructions based on the current state. The state can be determined from multiple sources: the agent's past actions (tool calls), external state (such as API call results), or even initial user input (for example, by running a classifier to determine user intent).
 
 In this tutorial, you'll build a customer support agent that does the following:
 
@@ -15,7 +15,7 @@ In this tutorial, you'll build a customer support agent that does the following:
 - Provides solutions or escalates to human support.
 - Maintains conversation state across multiple turns.
 
-Unlike the [supervisor pattern](/oss/langchain/supervisor) where sub-agents are called as tools, the **state machine pattern** uses a single agent whose configuration changes based on workflow progress. Each "step" is just a different configuration (system prompt + tools) of the same underlying agent, selected dynamically based on state.
+Unlike the [subagents pattern](/oss/langchain/multi-agent/subagents-personal-assistant) where sub-agents are called as tools, the **state machine pattern** uses a single agent whose configuration changes based on workflow progress. Each "step" is just a different configuration (system prompt + tools) of the same underlying agent, selected dynamically based on state.
 
 Here's the workflow we'll build:
 
@@ -805,7 +805,7 @@ if __name__ == "__main__":
 
 ## Next steps
 
-- Learn about the [supervisor pattern](/oss/langchain/supervisor) for centralized orchestration
+- Learn about the [subagents pattern](/oss/langchain/multi-agent/subagents-personal-assistant) for centralized orchestration
 - Explore [middleware](/oss/langchain/middleware) for more dynamic behaviors
 - Read the [multi-agent overview](/oss/langchain/multi-agent) to compare patterns
 - Use [LangSmith](https://smith.langchain.com) to debug and monitor your multi-agent system
