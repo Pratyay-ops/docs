@@ -229,9 +229,10 @@ jobs:
         with:
           script: |
             const preview = `${{ needs.create-preview.outputs.preview_branch }}`;
+            const previewUrl = `https://${preview}.mintlify.app`;
             await github.rest.issues.createComment({
               owner: context.repo.owner,
               repo: context.repo.repo,
               issue_number: context.issue.number,
-              body: `Mintlify preview ID generated: ${preview}`
+              body: `🔗 **Mintlify Preview**: [${preview}](${previewUrl})`
             });
