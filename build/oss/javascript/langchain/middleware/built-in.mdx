@@ -257,9 +257,11 @@ Limit the number of model calls to prevent infinite loops or excessive costs. Mo
 
 ```typescript
 import { createAgent, modelCallLimitMiddleware } from "langchain";
+import { MemorySaver } from "@langchain/langgraph";
 
 const agent = createAgent({
   model: "gpt-4o",
+  checkpointer: new MemorySaver(), // Required for thread limiting
   tools: [],
   middleware: [
     modelCallLimitMiddleware({
