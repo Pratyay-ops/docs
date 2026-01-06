@@ -163,7 +163,7 @@ Some chat models feature built-in tools that are executed server-side by the mod
 
 Refer to the individual [chat model integration pages](/oss/integrations/providers) and the [tool calling documentation](/oss/langchain/models#server-side-tool-use) for details on enabling and using these built-in tools.
 
-## Accessing context
+## Access context
 
 Tools are most powerful when they can access runtime information like conversation history, user data, and persistent memory. This section covers how to access and update this information from within your tools.
 
@@ -226,7 +226,7 @@ State represents short-term memory that exists for the duration of a conversatio
     Add `runtime: ToolRuntime` to your tool signature to access state. This parameter is automatically injected and hidden from the LLM - it won't appear in the tool's schema.
 </Info>
 
-#### Accessing state
+#### Access state
 
 Tools can read the current conversation state using `runtime.state`:
 
@@ -261,7 +261,7 @@ def get_user_preference(
     The `runtime` parameter is hidden from the model. For the example above, the model only sees `pref_name` in the tool schema.
 </Warning>
 
-#### Updating state
+#### Update state
 
 Use @[`Command`] to update the agent's state. This is useful for tools that need to modify conversation history or update custom state fields:
 
