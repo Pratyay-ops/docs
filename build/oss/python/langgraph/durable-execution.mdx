@@ -25,7 +25,7 @@ To leverage durable execution in LangGraph, you need to:
 
 
 
-## Determinism and Consistent Replay
+## Determinism and consistent replay
 
 When you resume a workflow run, the code does **NOT** resume from the **same line of code** where execution stopped; instead, it will identify an appropriate [starting point](#starting-points-for-resuming-workflows) from which to pick up where it left off. This means that the workflow will replay all steps from the [starting point](#starting-points-for-resuming-workflows) until it reaches the point where it was stopped.
 
@@ -169,7 +169,7 @@ If a [node](/oss/python/langgraph/graph-api#nodes) contains multiple operations,
 
 
 
-## Resuming Workflows
+## Resuming workflows
 
 Once you have enabled durable execution in your workflow, you can resume execution for the following scenarios:
 
@@ -179,7 +179,7 @@ Once you have enabled durable execution in your workflow, you can resume executi
 
 
 
-## Starting Points for Resuming Workflows
+## Starting points for resuming workflows
 
 * If you're using a [StateGraph (Graph API)](https://reference.langchain.com/python/langgraph/graphs/#langgraph.graph.state.StateGraph), the starting point is the beginning of the [**node**](/oss/python/langgraph/graph-api#nodes) where execution stopped.
 * If you're making a subgraph call inside a node, the starting point will be the **parent** node that called the subgraph that was halted.

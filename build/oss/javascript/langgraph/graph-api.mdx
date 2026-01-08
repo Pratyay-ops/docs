@@ -147,7 +147,7 @@ There are two subtle and important points to note here:
 
 Reducers are key to understanding how updates from nodes are applied to the `State`. Each key in the `State` has its own independent reducer function. If no reducer function is explicitly specified then it is assumed that all updates to that key should override it. There are a few different types of reducers, starting with the default type of reducer:
 
-#### Default Reducer
+#### Default reducer
 
 These two examples show how to use the default reducer:
 
@@ -191,7 +191,7 @@ In this example, we've used [Zod 4 registries](https://zod.dev/metadata) to spec
 
 
 
-### Working with Messages in Graph State
+### Working with messages in graph state
 
 #### Why use messages?
 
@@ -199,7 +199,7 @@ Most modern LLM providers have a chat model interface that accepts a list of mes
 
 To read more about what message objects are, please refer to the [Messages conceptual guide](/oss/javascript/langchain/messages).
 
-#### Using Messages in your Graph
+#### Using messages in your graph
 
 
 
@@ -305,7 +305,7 @@ builder.addNode(myNode);
 
 
 
-### `START` Node
+### `START` node
 
 The [`START`](https://reference.langchain.com/javascript/variables/_langchain_langgraph.index.START.html) Node is a special node that represents the node that sends user input to the graph. The main purpose for referencing this node is to determine which nodes should be called first.
 
@@ -319,7 +319,7 @@ graph.addEdge(START, "nodeA");
 
 
 
-### `END` Node
+### `END` node
 
 The `END` Node is a special node that represents a terminal node. This node is referenced when you want to denote which edges have no actions after they are done.
 
@@ -333,7 +333,7 @@ graph.addEdge("nodeA", END);
 
 
 
-### Node Caching
+### Node caching
 
 
 
@@ -388,7 +388,7 @@ Edges define how the logic is routed and how the graph decides to stop. This is 
 
 A node can have multiple outgoing edges. If a node has multiple outgoing edges, **all** of those destination nodes will be executed in parallel as a part of the next superstep.
 
-### Normal Edges
+### Normal edges
 
 
 
@@ -400,7 +400,7 @@ graph.addEdge("nodeA", "nodeB");
 
 
 
-### Conditional Edges
+### Conditional edges
 
 
 
@@ -536,7 +536,7 @@ When returning [`Command`](https://reference.langchain.com/javascript/classes/_l
 
 Check out this [how-to guide](/oss/javascript/langgraph/use-graph-api#combine-control-flow-and-state-updates-with-command) for an end-to-end example of how to use [`Command`](https://reference.langchain.com/javascript/classes/_langchain_langgraph.index.Command.html).
 
-### When should I use Command instead of conditional edges?
+### When should I use command instead of conditional edges?
 
 - Use [`Command`](https://reference.langchain.com/javascript/classes/_langchain_langgraph.index.Command.html) when you need to **both** update the graph state **and** route to a different node. For example, when implementing [multi-agent handoffs](/oss/javascript/langchain/multi-agent/handoffs) where it's important to route to a different agent and pass some information to that agent.
 - Use [conditional edges](#conditional-edges) to route between nodes conditionally without updating the state.
