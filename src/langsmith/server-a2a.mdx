@@ -49,7 +49,7 @@ To enable A2A:
 
 This example creates an A2A-compatible agent that processes incoming messages using OpenAI's API and maintains conversational state. The agent defines a message-based state structure and handles the A2A protocol's message format.
 
-To be compatible with the [A2A "text" parts](https://a2a-protocol.org/dev/specification/#651-textpart-object), the agent must have a `messages` key in state. Here's an example:
+To be compatible with the [A2A "text" parts](https://a2a-protocol.org/dev/specification/#651-textpart-object), the agent must have a `messages` key in state. For multi-turn conversations, reuse message.contextId from the prior response. (It’s omitted on the first message only.) Here's an example:
 
 ```python
 """LangGraph A2A conversational agent.
@@ -145,38 +145,61 @@ This example demonstrates how two agents can communicate by sending JSON-RPC mes
 
 ```python
 #!/usr/bin/env python3
-"""Agent-to-Agent conversation simulation using LangGraph A2A protocol."""
+"""Agent-to-Agent conversation simulation using the LangGraph A2A endpoint."""
 
 import asyncio
 import aiohttp
 import os
+import uuid
 
-async def send_message(session, port, assistant_id, text):
-    """Send a message to an agent and return the response text."""
+
+def extract_text(result: dict) -> str:
+    """Best-effort extraction of response text from an A2A result."""
+    for art in result.get("result", {}).get("artifacts", []) or []:
+        for part in art.get("parts", []) or []:
+            if part.get("kind") == "text" and part.get("text"):
+                return part["text"]
+
+    msg = (result.get("result", {}).get("status", {}) or {}).get("message", {}) or {}
+    for part in msg.get("parts", []) or []:
+        if part.get("kind") == "text" and part.get("text"):
+            return part["text"]
+
+    return "(no text found)"
+
+
+async def send_message(session, port, assistant_id, text, context_id=None, trace_thread_id=None):
+    """Send an A2A message. Returns (response_text, returned_context_id)."""
     url = f"http://127.0.0.1:{port}/a2a/{assistant_id}"
+
+    message = {
+        "role": "user",
+        "parts": [{"kind": "text", "text": text}],
+        "messageId": str(uuid.uuid4()),
+    }
+
+    # A2A multi-turn continuity: reuse contextId across turns/agents
+    if context_id:
+        message["contextId"] = context_id
+
     payload = {
         "jsonrpc": "2.0",
-        "id": "",
+        "id": str(uuid.uuid4()),
         "method": "message/send",
-        "params": {
-            "message": {
-                "role": "user",
-                "parts": [{"kind": "text", "text": text}]
-            },
-            "messageId": "",
-            "thread": {"threadId": ""}
-        }
+        "params": {"message": message},
     }
+
+    # Optional (LangSmith UI grouping): not part of the A2A spec
+    if trace_thread_id:
+        payload["metadata"] = {"thread_id": trace_thread_id}
 
     headers = {"Accept": "application/json"}
     async with session.post(url, json=payload, headers=headers) as response:
-        try:
-            result = await response.json()
-            return result["result"]["artifacts"][0]["parts"][0]["text"]
-        except Exception as e:
-            text = await response.text()
-            print(f"Response error from port {port}: {response.status} - {text}")
-            return f"Error from port {port}: {response.status}"
+        result = await response.json()
+
+    returned_context_id = result.get("result", {}).get("contextId") or context_id
+    return extract_text(result), returned_context_id
+
 
 async def simulate_conversation():
     """Simulate a conversation between two agents."""
@@ -188,19 +211,29 @@ async def simulate_conversation():
         return
 
     message = "Hello! Let's have a conversation."
+    context_id = None
+
+    # Optional: stable trace grouping even before contextId exists
+    trace_thread_id = str(uuid.uuid4())
 
     async with aiohttp.ClientSession() as session:
         for i in range(3):
             print(f"--- Round {i + 1} ---")
 
-            # Agent A responds
-            message = await send_message(session, 2024, agent_a_id, message)
+            message, context_id = await send_message(
+                session, 2024, agent_a_id, message,
+                context_id=context_id,
+                trace_thread_id=(context_id or trace_thread_id),
+            )
             print(f"🔵 Agent A: {message}")
 
-            # Agent B responds
-            message = await send_message(session, 2025, agent_b_id, message)
-            print(f"🔴 Agent B: {message}")
-            print()
+            message, context_id = await send_message(
+                session, 2025, agent_b_id, message,
+                context_id=context_id,
+                trace_thread_id=(context_id or trace_thread_id),
+            )
+            print(f"🔴 Agent B: {message}\n")
+
 
 if __name__ == "__main__":
     asyncio.run(simulate_conversation())
