@@ -1441,6 +1441,8 @@
                     {
                       "group": "Configuration",
                       "pages": [
+                        "langsmith/agent-builder-self-hosted",
+                        "langsmith/insights-self-hosted",
                         "langsmith/self-host-scale",
                         "langsmith/self-host-ttl",
                         "langsmith/custom-docker",
