@@ -43,7 +43,7 @@ for the answer is logically valid and consistent with the question and the answe
 
     msg = f"Question: {inputs['question']}\nAnswer: {outputs['answer']}\nReasoning: {outputs['reasoning']}"
     response = oai_client.beta.chat.completions.parse(
-        model="gpt-4o",
+        model="gpt-4.1",
         messages=[{"role": "system", "content": instructions,}, {"role": "user", "content": msg}],
         response_format=Response
     )
