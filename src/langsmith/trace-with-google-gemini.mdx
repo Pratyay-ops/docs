@@ -1,0 +1,143 @@
+---
+title: Trace with Google Gemini
+sidebarTitle: Google Gemini
+---
+
+LangSmith supports tracing Google Gemini applications through the OpenTelemetry integration. This guide shows you how to capture traces automatically from your [Google Gemini](https://ai.google.dev/gemini-api/docs) applications and send them to LangSmith for monitoring and analysis.
+
+## Installation
+
+Install the required packages using your preferred package manager:
+
+<CodeGroup>
+
+```bash pip
+pip install langsmith google-genai openinference-instrumentation-google-genai
+```
+
+```bash uv
+uv add langsmith google-genai openinference-instrumentation-google-genai
+```
+
+</CodeGroup>
+
+<Info>
+Requires LangSmith Python SDK version `langsmith>=0.4.26` for optimal OpenTelemetry support.
+</Info>
+
+<Note>
+This guide uses the newer [`google-genai`](https://docs.cloud.google.com/vertex-ai/generative-ai/docs/sdks/overview) package. If you're using the older `google-generativeai` package, please migrate to `google-genai` as the older package is deprecated.
+</Note>
+
+## Setup
+
+### 1. Set environment variables
+
+Set your [API keys](/langsmith/create-account-api-key) and project name:
+
+```bash Shell
+export LANGSMITH_API_KEY=<your_langsmith_api_key>
+export LANGSMITH_PROJECT=<your_project_name>
+export GOOGLE_API_KEY=<your_google_api_key>
+```
+
+To create a Google API key, refer to [Google AI Studio](https://aistudio.google.com/apikey).
+
+
+### 2. Configure LangSmith tracing
+
+In your Google Gemini application, configure the LangSmith OpenTelemetry integration and instrument the Google GenAI SDK:
+
+```python
+from google import genai
+from langsmith.integrations.otel import configure
+from openinference.instrumentation.google_genai import GoogleGenAIInstrumentor
+
+# Configure LangSmith tracing
+configure(project_name="gemini-demo")
+
+# Instrument Google Gemini
+GoogleGenAIInstrumentor().instrument()
+
+# Create client and generate content
+client = genai.Client()
+response = client.models.generate_content(
+    model="gemini-2.0-flash-exp",
+    contents="Explain quantum computing in simple terms"
+)
+print(response.text)
+```
+
+<Note>
+You do not need to set any OpenTelemetry environment variables or configure exporters manually—`configure()` handles everything automatically.
+</Note>
+
+## Advanced usage
+
+### Add custom metadata and tags
+
+You can add custom metadata to your traces using OpenTelemetry span attributes:
+
+```python
+from opentelemetry import trace
+from google import genai
+from langsmith.integrations.otel import configure
+from openinference.instrumentation.google_genai import GoogleGenAIInstrumentor
+
+configure(project_name="gemini-metadata")
+GoogleGenAIInstrumentor().instrument()
+
+tracer = trace.get_tracer(__name__)
+client = genai.Client()
+
+with tracer.start_as_current_span("gemini_workflow") as span:
+    span.set_attribute("langsmith.metadata.user_id", "user_123")
+    span.set_attribute("langsmith.metadata.workflow_type", "question_answering")
+    span.set_attribute("langsmith.span.tags", "gemini,production")
+
+    response = client.models.generate_content(
+        model="gemini-2.0-flash-exp",
+        contents="What is machine learning?"
+    )
+    print(response.text)
+```
+
+For more details on the core LangSmith attributes, refer to the [Trace with OpenTelemetry](/langsmith/trace-with-opentelemetry#core-langsmith-attributes) page.
+
+### Start multi-turn conversations
+
+Trace multi-turn conversations with Gemini's chat interface. The [Google GenAI SDK](https://docs.cloud.google.com/vertex-ai/generative-ai/docs/sdks/overview) supports chat sessions, which maintain context across messages. Each message send will be captured as a traced operation:
+
+```python
+from google import genai
+from google.genai import types
+from langsmith.integrations.otel import configure
+from openinference.instrumentation.google_genai import GoogleGenAIInstrumentor
+
+configure(project_name="gemini-chat")
+GoogleGenAIInstrumentor().instrument()
+
+client = genai.Client()
+
+# Start a chat session
+chat = client.chats.create(model="gemini-2.0-flash-exp")
+
+# Send messages - each interaction will be traced
+response1 = chat.send_message("What are the main programming paradigms?")
+print(response1.text)
+
+response2 = chat.send_message("Can you give examples of each?")
+print(response2.text)
+```
+
+`client.chats.create()` starts a new chat session with the model, and subsequent `chat.send_message()` calls continue the conversation.
+
+## View traces in LangSmith
+
+After running your application, you can view traces in LangSmith that include:
+
+- **Model requests**: Complete prompts sent to Gemini models
+- **Model responses**: Generated text and structured outputs
+- **Function calls**: Tool invocations and results when using function calling
+- **Chat sessions**: Multi-turn conversation context
+- **Performance metrics**: Latency and token usage information
