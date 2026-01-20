@@ -241,9 +241,9 @@ Now that we've defined our application, let's add tracing to it with just three 
 <Tip>
 **Tracing Best Practice**:
 - Structure both inputs and outputs with messages as a top-level key, using the shape `{"messages": [...]}`.
-- Log the full message history (not individual messages) so LangSmith can capture the complete conversation flow, including tool calls and intermediate steps. This makes debugging much easier.
+- Log the full message history (not individual messages) so LangSmith can capture the complete conversation flow, including tool calls and intermediate steps. Viewing the full conversation history in LangSmith makes it easier to understand what happened and debug issues.
 
-This enables much nicer rendering in LangSmith: message lists are displayed in a structured, readable format that makes them easier to scan. Using the `messages` structure is required to unlock some features, like [Polly](/langsmith/polly), [LangSmith Fetch](https://github.com/langchain-ai/langsmith-fetch) and [multi-turn evals](/langsmith/online-evaluations#configure-multi-turn-online-evaluators).
+This format allows LangSmith to render message lists in a structured, readable view. Using the `messages` structure is also required to unlock some features, like [Polly](/langsmith/polly), [LangSmith Fetch](https://github.com/langchain-ai/langsmith-fetch) and [multi-turn evals](/langsmith/online-evaluations#configure-multi-turn-online-evaluators).
 </Tip>
 
 

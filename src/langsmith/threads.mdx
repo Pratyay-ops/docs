@@ -21,6 +21,15 @@ The value can be any string you want, but we recommend using UUIDs, such as `f47
 
 This example demonstrates how to log and retrieve conversation history using a structured message format to maintain long-running chats.
 
+<Tip>
+**Tracing Best Practice**:
+To make the most of LangSmith’s LLM trace processing, you should:
+- Structure both inputs and outputs with messages as a top-level key, using the shape `{"messages": [...]}`.
+- Log the full message history (not individual messages) so LangSmith can capture the complete conversation flow, including tool calls and intermediate steps. Viewing the full conversation history in LangSmith makes it easier to understand what happened and debug issues.
+
+This format allows LangSmith to render message lists in a structured, readable view. Using the `messages` structure is also required to unlock some features, like [Polly](/langsmith/polly), [LangSmith Fetch](https://github.com/langchain-ai/langsmith-fetch) and [multi-turn evals](/langsmith/online-evaluations#configure-multi-turn-online-evaluators).
+</Tip>
+
 <CodeGroup>
 
 ```python Python

@@ -3,13 +3,15 @@ title: Log LLM calls
 sidebarTitle: Log LLM calls
 ---
 
-This guide will cover how to log LLM calls to LangSmith when you are using a custom model or a custom input/output format. To make the most of LangSmith's LLM trace processing, you should log your LLM traces in one of the specified formats.
+This guide will cover how to log LLM calls to LangSmith when you are using a custom model or a custom input/output format. To make the most of LangSmith's LLM trace processing, you should log your LLM traces in one of the formats specified below.
 
 LangSmith offers the following benefits for LLM traces:
 - Rich, structured rendering of message lists
 - Token and cost tracking per LLM call, per trace and across traces over time
 
-If you don't log your LLM traces in the suggested formats, you will still be able to log the data to LangSmith, but it may not be processed or rendered in expected ways.
+<Warning>
+If you don't log your LLM traces in the suggested formats, you will still be able to log the data to LangSmith, but it may not be processed or rendered in expected ways. Additionally, you will not be able to use some features, like [Polly](/langsmith/polly), [LangSmith Fetch](https://github.com/langchain-ai/langsmith-fetch) and [multi-turn evals](/langsmith/online-evaluations#configure-multi-turn-online-evaluators).
+</Warning>
 
 If you are using [LangChain OSS](https://python.langchain.com/docs/tutorials/llm_chain/) to call language models or LangSmith wrappers ([OpenAI](/langsmith/trace-openai), [Anthropic](/langsmith/trace-anthropic)), these approaches will automatically log traces in the correct format.
 
@@ -18,7 +20,7 @@ The examples on this page use the `traceable` decorator/wrapper to log the model
 </Note>
 
 
-## Messages Format
+### Messages Format
 
 When tracing a custom model or a custom input/output format, it must either follow the LangChain format, OpenAI completions format or Anthropic messages format. For more details,  refer to the [OpenAI Chat Completions](https://platform.openai.com/docs/api-reference/chat/create) or [Anthropic Messages](https://platform.claude.com/docs/en/api/messages) documentation. The LangChain format is:
 
