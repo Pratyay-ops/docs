@@ -3,7 +3,9 @@ title: Tracing quickstart
 sidebarTitle: Quickstart
 ---
 
-[_Observability_](/langsmith/observability-concepts) is a critical requirement for applications built with Large Language Models (LLMs) because they are non-deterministic. The same prompt can produce different responses, which makes debugging and monitoring more challenging than with traditional software.
+import project from '/snippets/langsmith/trace-ingestion-project.mdx';
+
+[_Observability_](/langsmith/observability-concepts) is a critical requirement for applications built with Large Language Models (LLMs). LLMs are non-deterministic, which means that the same prompt can produce different responses. This behavior makes debugging and monitoring more challenging than with traditional software.
 
 LangSmith addresses this by providing end-to-end visibility into each request. Every request generates a [_trace_](/langsmith/observability-concepts#traces), which is a complete record of what happened. Within a trace are individual [_runs_](/langsmith/observability-concepts#runs), the specific operations your application performed, such as an LLM or tool call.
 
@@ -59,6 +61,12 @@ export LANGSMITH_API_KEY="<your-langsmith-api-key>"
 export OPENAI_API_KEY="<your-openai-api-key>"
 export LANGSMITH_WORKSPACE_ID="<your-workspace-id>"
 ```
+
+If you're using Anthropic, use the [Anthropic wrapper](/langsmith/trace-anthropic) to trace your calls. For other providers, use [the traceable wrapper](/langsmith/annotate-code#use-%40traceable-%2F-traceable).
+
+<Note>
+<project />
+</Note>
 
 ## 3. Define your application
 
