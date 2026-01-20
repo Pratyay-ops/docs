@@ -936,7 +936,7 @@
                 "langsmith/observability",
                 "langsmith/observability-quickstart",
                 "langsmith/observability-concepts",
-                "langsmith/observability-llm-tutorial",
+                "langsmith/tracing-standards",
                 {
                   "group": "Tracing setup",
                   "pages": [
@@ -975,7 +975,8 @@
                         "langsmith/upload-files-with-traces"
                       ]
                     },
-                    "langsmith/threads"
+                    "langsmith/threads",
+                    "langsmith/observability-llm-tutorial"
                   ]
                 },
                 {
