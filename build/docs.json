@@ -1139,6 +1139,7 @@
                       "group": "Evaluation techniques",
                       "pages": [
                         "langsmith/experiment-configuration",
+                        "langsmith/evaluate-with-retry",
                         "langsmith/define-target-function",
                         "langsmith/evaluate-on-intermediate-steps",
                         "langsmith/multiple-scores",
