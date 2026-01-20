@@ -2,6 +2,7 @@
 title: Tracing quickstart
 sidebarTitle: Quickstart
 ---
+import TracingStandards from '/snippets/langsmith/tracing-standards.mdx';
 
 [_Observability_](/langsmith/observability-concepts) is a critical requirement for applications built with Large Language Models (LLMs) because they are non-deterministic. The same prompt can produce different responses, which makes debugging and monitoring more challenging than with traditional software.
 
@@ -238,14 +239,7 @@ Now that we've defined our application, let's add tracing to it with just three 
 2. **Wrap the OpenAI client** - Automatically traces all OpenAI calls.
 3. **Wrap tool functions** - Creates runs for tool execution, can also be used to trace other functions.
 
-<Tip>
-**Tracing Best Practice**:
-- Structure both inputs and outputs with messages as a top-level key, using the shape `{"messages": [...]}`.
-- Log the full message history (not individual messages) so LangSmith can capture the complete conversation flow, including tool calls and intermediate steps. Viewing the full conversation history in LangSmith makes it easier to understand what happened and debug issues.
-
-This format allows LangSmith to render message lists in a structured, readable view. Using the `messages` structure is also required to unlock some features, like [Polly](/langsmith/polly), [LangSmith Fetch](https://github.com/langchain-ai/langsmith-fetch) and [multi-turn evals](/langsmith/online-evaluations#configure-multi-turn-online-evaluators).
-</Tip>
-
+<TracingStandards />
 
 <CodeGroup>
 

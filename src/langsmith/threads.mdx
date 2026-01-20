@@ -3,11 +3,16 @@ title: Configure threads
 sidebarTitle: Threads
 ---
 
+import TracingStandards from '/snippets/langsmith/tracing-standards.mdx';
+
 Many LLM applications have a chatbot-like interface in which the user and the LLM application engage in a multi-turn conversation. In order to track these conversations, you can use the `Threads` feature in LangSmith.
 
 ## Group traces into threads
 
 A `Thread` is a sequence of traces representing a single conversation. Each response is represented as its own trace, but these traces are linked together by being part of the same thread.
+
+<TracingStandards />
+
 
 To associate traces together, you need to pass in a special `metadata` key where the value is the unique identifier for that thread. The key name should be one of:
 
@@ -20,16 +25,6 @@ The value can be any string you want, but we recommend using UUIDs, such as `f47
 ### Example
 
 This example demonstrates how to log and retrieve conversation history using a structured message format to maintain long-running chats.
-
-<Tip>
-**Tracing Best Practice**:
-To make the most of LangSmith’s LLM trace processing, you should:
-- Structure both inputs and outputs with messages as a top-level key, using the shape `{"messages": [...]}`.
-- Log the full message history (not individual messages) so LangSmith can capture the complete conversation flow, including tool calls and intermediate steps. Viewing the full conversation history in LangSmith makes it easier to understand what happened and debug issues.
-
-This format allows LangSmith to render message lists in a structured, readable view. Using the `messages` structure is also required to unlock some features, like [Polly](/langsmith/polly), [LangSmith Fetch](https://github.com/langchain-ai/langsmith-fetch) and [multi-turn evals](/langsmith/online-evaluations#configure-multi-turn-online-evaluators).
-</Tip>
-
 <CodeGroup>
 
 ```python Python
@@ -342,7 +337,7 @@ You can use the buttons at the top of the page to switch between the two views o
 
 #### Thread overview
 
-The thread overview page shows you a chatbot-like UI where you can see the inputs and outputs for each turn of the conversation. You can configure which fields in the inputs and outputs are displayed in the overview, or show multiple fields by clicking the **Configure** button.
+The thread overview page shows you a chatbot-like UI where you can see the inputs and outputs for each turn of the conversation. You can configure which fields in the inputs and outputs are displayed in the overview, or show multiple fields by clicking the **Format** button.
 
 The JSON path for the inputs and outputs supports negative indexing, so you can use `-1` to access the last element of an array. For example, `inputs.messages[-1].content` will access the last message in the `messages` array.
 

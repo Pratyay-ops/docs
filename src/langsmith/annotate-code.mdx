@@ -3,26 +3,28 @@ title: Custom instrumentation
 sidebarTitle: Custom instrumentation
 ---
 
-<Note>
-If you've decided you no longer want to trace your runs, you can remove the `LANGSMITH_TRACING` environment variable. Note that this does not affect the `RunTree` objects or API users, as these are meant to be low-level and not affected by the tracing toggle.
-</Note>
-
 There are several ways to log traces to LangSmith.
 
 <Check>
 If you are using LangChain (either Python or JS/TS), you can skip this section and go directly to the [LangChain-specific instructions](/langsmith/trace-with-langchain).
 </Check>
 
+<Tip>
+If you are using traceable or the Run Tree API to log LLM calls, ensure that the input to the function includes the message history as well as the new message or instruction. This gives the right visibility in the run, and allows the [LangSmith Playground](/langsmith/prompt-engineering-concepts#prompt-playground) to be pre-filled with the right context when you open it up from the LLM run.
+
+If you are using [LangChain OSS](https://docs.langchain.com/#:~:text=Open%20source%20agent%20frameworks) or LangSmith wrappers ([OpenAI](/langsmith/trace-openai), [Anthropic](/langsmith/trace-anthropic)) to call LLMs, this is handled automatically.
+</Tip>
+
 ## Use `@traceable` / `traceable`
 
 LangSmith makes it easy to log traces with minimal changes to your existing code with the `@traceable` decorator in Python and `traceable` function in TypeScript.
 
 <Note>
-The `LANGSMITH_TRACING` environment variable must be set to `'true'` in order for traces to be logged to LangSmith, even when using `@traceable` or `traceable`. This allows you to toggle tracing on and off without changing your code.
+The `LANGSMITH_TRACING` environment variable must be set to `'true'` in order for traces to be logged to LangSmith when using `@traceable` or `traceable`. This allows you to toggle tracing on and off without changing your code.
 
-Additionally, you will need to set the `LANGSMITH_API_KEY` environment variable to your API key (see [Setup](/) for more information).
+Additionally, you will need to set the `LANGSMITH_API_KEY` environment variable to your API key (see [Setup](//langsmith/observability-quickstart#2-set-up-environment-variables) for more information). By default, the traces will be logged to a project named `default`. To log traces to a different project, see [this section](/langsmith/log-traces-to-project).
 
-By default, the traces will be logged to a project named `default`. To log traces to a different project, see [this section](/langsmith/log-traces-to-project).
+If you no longer want to trace your runs, you can remove the `LANGSMITH_TRACING` environment variable. Note that this does not affect the `RunTree` objects or API users, as these are meant to be low-level and not affected by the tracing toggle.
 </Note>
 
 
