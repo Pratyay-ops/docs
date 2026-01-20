@@ -5,7 +5,7 @@ sidebarTitle: Tracing Standards
 
 This page defines the tracing standards required to unlock important capabilities in LangSmith. Structuring your traces correctly is required to make the most of LangSmith:
 
-**1. Rich debugging experience**: LangSmith provides structured rendering of message lists, making it easier to visualize and understand the conversation history.
+**1. Rich debugging experience**: LangSmith provides structured rendering of message lists, making it easier to visualize and understand the interaction history.
 
 **2. LangSmith features**: Features like [Polly](/langsmith/polly), [LangSmith Fetch](https://github.com/langchain-ai/langsmith-fetch) and [multi-turn evals](/langsmith/online-evaluations#configure-multi-turn-online-evaluators) require properly structured traces to work correctly.
 
@@ -15,11 +15,11 @@ LangSmith has three levels that work together to capture your agent's behavior:
 
 #### Threads
 
-A [_**Thread**_](/langsmith/threads) groups multiple interactions together so you can see the conversation history over time. In the LangSmith UI, threads can be viewed in the "Threads" tab within a Tracing Project.
+A [_**Thread**_](/langsmith/threads) groups multiple interactions together so you can see the history over time. In the LangSmith UI, threads can be viewed in the "Threads" tab within a Tracing Project.
 
 #### Traces
 
-A [_**Trace**_](/langsmith/observability-concepts#traces) represents a single request/response cycle, also known as a "turn" in the conversation. It contains everything that happened during one execution of an agent. Multiple traces, [grouped together](/langsmith/threads), form a thread. In the LangSmith UI, a trace is the "parent" node in the execution tree.
+A [_**Trace**_](/langsmith/observability-concepts#traces) represents a single request/response cycle, also known as a "turn". It contains everything that happened during one execution of an agent. Multiple traces, [grouped together](/langsmith/threads), form a thread. In the LangSmith UI, a trace is the "parent" node in the execution tree.
 
 #### Runs
 
@@ -44,11 +44,11 @@ A [_**Run**_](/langsmith/observability-concepts#runs) is an individual operation
 Structure your traces so each one is self-contained and replayable:
 
 - **Input:** The new message or instruction. For example: _What's the status of the Tokyo shipment?_
-- **Output:** Output is the state of the conversation after the turn. Represents the current memory (conversation history + new messages) of the agent after the turn is complete. For example: _What’s the status of the Tokyo shipment? -> Checked the shipping logs -> Found the Tokyo tracking number -> Confirmed it arrived at port -> Told the user._
+- **Output:** Output is the state of the interaction after the turn. Represents the current memory (interaction history + new messages) of the agent after the turn is complete. For example: _What’s the status of the Tokyo shipment? -> Checked the shipping logs -> Found the Tokyo tracking number -> Confirmed it arrived at port -> Told the user._
 
 The benefit of this approach is **any trace can be understood independently** without needing to search for prior context.
 
-Both inputs and outputs of a trace must have `messages` as a top-level key that represents the conversation.
+Both inputs and outputs of a trace must have `messages` as a top-level key that represents the interaction.
 
  **Input:**
     ```json
@@ -74,7 +74,7 @@ Both inputs and outputs of a trace must have `messages` as a top-level key that 
     }
     ```
 
-You can think of the output as the conversation state after the turn, which is why outputs should include the full message history—not just the latest response. The output is a complete "receipt" of what happened in that turn.
+You can think of the output as the intraction state after the turn, which is why outputs should include the full message history—not just the latest response. The output is a complete "receipt" of what happened in that turn.
 
 View [Threads](/langsmith/threads#example) for more information on how to configure threads, and the expected trace structure within a thread.
 
@@ -99,7 +99,7 @@ If you're using [LangChain OSS](https://docs.langchain.com/#:~:text=Open%20sourc
 
 <Expandable title="LangChain Messages Format (Click to expand)">
   <ParamField path="messages" type="array" required>
-    A list of messages containing the content of the conversation.
+    A list of messages containing the content of the interaction.
 
     <ParamField path="role" type="string" required>
       Identifies the message type. One of: <code>system</code> | <code>reasoning</code> | <code>user</code> | <code>assistant</code> | <code>tool</code>

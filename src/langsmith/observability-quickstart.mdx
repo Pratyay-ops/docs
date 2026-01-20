@@ -17,7 +17,7 @@ In this quickstart, you will set up a simple agent with [function calling](https
 Before you begin, make sure you have:
 
 - **A LangSmith account**: Sign up or log in at [smith.langchain.com](https://smith.langchain.com).
-- **A LangSmith API key**: Create an API key [here](https://smith.langchain.com/settings/apikeys).
+- **A LangSmith API key**: Go to [Settings > API Keys](https://smith.langchain.com/settings/apikeys) and create a new API key.
 - **An OpenAI API key**: Generate this from the [OpenAI dashboard](https://platform.openai.com/account/api-keys).
 
 This quickstart will use [OpenAI Responses API](https://platform.openai.com/docs/api-reference/responses). You can adapt this to your LLM provider of choice. If you're using Anthropic, use the [Anthropic wrapper](/langsmith/annotate-code#wrap-the-anthropic-client-python-only) to trace your calls. For other providers, use [the traceable wrapper](/langsmith/annotate-code#use-%40traceable-%2F-traceable).
@@ -69,9 +69,9 @@ If you're using Anthropic, use the [Anthropic wrapper](/langsmith/trace-anthropi
 <project />
 </Note>
 
-## 3. Define your application
+## 3. Build your application
 
-Let's build a simple agent that uses OpenAI's Responses API with function calling. This example shows a weather assistant that can look up weather information. For simplicity, we'll return a static forecast.
+In this step, you'll build a simple agent that uses OpenAI's Responses API with function calling. This example shows a weather assistant that can look up weather information. For simplicity, you'll return a static forecast.
 
 <CodeGroup>
 
