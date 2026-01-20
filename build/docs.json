@@ -1391,14 +1391,6 @@
                   ]
                 },
                 {
-                  "group": "Self-hosted cloud architecture",
-                  "pages": [
-                    "langsmith/aws-self-hosted",
-                    "langsmith/azure-self-hosted",
-                    "langsmith/gcp-self-hosted"
-                  ]
-                },
-                {
                   "group": "Hybrid",
                   "pages": [
                     "langsmith/hybrid",
@@ -1409,6 +1401,14 @@
                   "group": "Self-hosted",
                   "pages": [
                     "langsmith/self-hosted",
+                    {
+                      "group": "Get started by cloud provider",
+                      "pages": [
+                        "langsmith/aws-self-hosted",
+                        "langsmith/azure-self-hosted",
+                        "langsmith/gcp-self-hosted"
+                      ]
+                    },
                     {
                       "group": "Setup guides",
                       "pages": [
