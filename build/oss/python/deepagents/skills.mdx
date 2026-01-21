@@ -121,38 +121,6 @@ result = agent.invoke(
 )
 ```
 
-```python FilesystemBackend
-from deepagents import create_deep_agent
-from langgraph.checkpoint.memory import MemorySaver
-from deepagents.backends.filesystem import FilesystemBackend
-
-# Checkpointer is REQUIRED for human-in-the-loop
-checkpointer = MemorySaver()
-
-agent = create_deep_agent(
-    backend=FilesystemBackend(root_dir="/Users/user/{project}"),
-    skills=["/Users/user/{project}/skills/"],
-    interrupt_on={
-        "write_file": True,  # Default: approve, edit, reject
-        "read_file": False,  # No interrupts needed
-        "edit_file": True    # Default: approve, edit, reject
-    },
-    checkpointer=checkpointer,  # Required!
-)
-
-result = agent.invoke(
-    {
-        "messages": [
-            {
-                "role": "user",
-                "content": "What is langgraph?",
-            }
-        ]
-    },
-    config={"configurable": {"thread_id": "12345"}},
-)
-```
-
 ```python StoreBackend
 from urllib.request import urlopen
 from deepagents import create_deep_agent
@@ -176,6 +144,38 @@ agent = create_deep_agent(
     backend=(lambda rt: StoreBackend(rt)),
     store=store,
     skills=["./skills/"]
+)
+
+result = agent.invoke(
+    {
+        "messages": [
+            {
+                "role": "user",
+                "content": "What is langgraph?",
+            }
+        ]
+    },
+    config={"configurable": {"thread_id": "12345"}},
+)
+```
+
+```python FilesystemBackend
+from deepagents import create_deep_agent
+from langgraph.checkpoint.memory import MemorySaver
+from deepagents.backends.filesystem import FilesystemBackend
+
+# Checkpointer is REQUIRED for human-in-the-loop
+checkpointer = MemorySaver()
+
+agent = create_deep_agent(
+    backend=FilesystemBackend(root_dir="/Users/user/{project}"),
+    skills=["/Users/user/{project}/skills/"],
+    interrupt_on={
+        "write_file": True,  # Default: approve, edit, reject
+        "read_file": False,  # No interrupts needed
+        "edit_file": True    # Default: approve, edit, reject
+    },
+    checkpointer=checkpointer,  # Required!
 )
 
 result = agent.invoke(
