@@ -151,18 +151,6 @@ The following parameter names are reserved and cannot be used as tool arguments.
 To access runtime information, use the @[`ToolRuntime`] parameter instead of naming your own arguments `config` or `runtime`.
 :::
 
-## Prebuilt tools
-
-LangChain provides a large collection of prebuilt tools and toolkits for common tasks like web search, code interpretation, database access, and more. These ready-to-use tools can be directly integrated into your agents without writing custom code.
-
-See the [tools and toolkits](/oss/integrations/tools) integration page for a complete list of available tools organized by category.
-
-## Server-side tool use
-
-Some chat models feature built-in tools that are executed server-side by the model provider. These include capabilities like web search and code interpreters that don't require you to define or host the tool logic.
-
-Refer to the individual [chat model integration pages](/oss/integrations/providers) and the [tool calling documentation](/oss/langchain/models#server-side-tool-use) for details on enabling and using these built-in tools.
-
 ## Access context
 
 Tools are most powerful when they can access runtime information like conversation history, user data, and persistent memory. This section covers how to access and update this information from within your tools.
@@ -220,7 +208,7 @@ graph LR
 
 ### Short-term memory (State)
 
-State represents short-term memory that exists for the duration of a conversation. It includes the message history and any custom fields you define in your graph state.
+State represents short-term memory that exists for the duration of a conversation. It includes the message history and any custom fields you define in your [graph state](/oss/langgraph/graph-api#state).
 
 <Info>
     Add `runtime: ToolRuntime` to your tool signature to access state. This parameter is automatically injected and hidden from the LLM - it won't appear in the tool's schema.
@@ -228,7 +216,7 @@ State represents short-term memory that exists for the duration of a conversatio
 
 #### Access state
 
-Tools can read the current conversation state using `runtime.state`:
+Tools can access the current conversation state using `runtime.state`:
 
 ```python
 from langchain.tools import tool, ToolRuntime
@@ -263,25 +251,12 @@ def get_user_preference(
 
 #### Update state
 
-Use @[`Command`] to update the agent's state. This is useful for tools that need to modify conversation history or update custom state fields:
+Use @[`Command`] to update the agent's state. This is useful for tools that need to update custom state fields:
 
 ```python
 from langgraph.types import Command
-from langchain.messages import RemoveMessage
-from langgraph.graph.message import REMOVE_ALL_MESSAGES
-from langchain.tools import tool, ToolRuntime
+from langchain.tools import tool
 
-# Clear all messages from conversation history
-@tool
-def clear_conversation() -> Command:
-    """Clear the conversation history."""
-    return Command(
-        update={
-            "messages": [RemoveMessage(id=REMOVE_ALL_MESSAGES)],
-        }
-    )
-
-# Update a custom state field
 @tool
 def set_user_name(new_name: str) -> Command:
     """Set the user's name in the conversation state."""
@@ -577,3 +552,15 @@ const getWeather = tool(
 );
 ```
 :::
+
+## Prebuilt tools
+
+LangChain provides a large collection of prebuilt tools and toolkits for common tasks like web search, code interpretation, database access, and more. These ready-to-use tools can be directly integrated into your agents without writing custom code.
+
+See the [tools and toolkits](/oss/integrations/tools) integration page for a complete list of available tools organized by category.
+
+## Server-side tool use
+
+Some chat models feature built-in tools that are executed server-side by the model provider. These include capabilities like web search and code interpreters that don't require you to define or host the tool logic.
+
+Refer to the individual [chat model integration pages](/oss/integrations/providers) and the [tool calling documentation](/oss/langchain/models#server-side-tool-use) for details on enabling and using these built-in tools.
