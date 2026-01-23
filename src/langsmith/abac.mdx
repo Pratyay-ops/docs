@@ -75,7 +75,7 @@ Each condition group specifies:
 
 #### Resource types and permissions
 
-| Resource Type | Supported Permissions |
+| Resource type | Supported permissions |
 |---------------|----------------------|
 | `project` | `projects:read`, `runs:read` |
 | `prompt` | `prompts:read`, `prompts:update`, `prompts:delete` |
@@ -143,7 +143,7 @@ Access policies are managed via the LangSmith API by [Organization Admins](/lang
 
 **Feature combinations:**
 
-| RBAC Enabled | ABAC Enabled | Behavior |
+| RBAC enabled | ABAC enabled | Behavior |
 |--------------|--------------|----------|
 | ✗ | ✗ | All workspace members have Admin-level access |
 | ✓ | ✗ | Standard RBAC - access based on role permissions |
@@ -151,7 +151,7 @@ Access policies are managed via the LangSmith API by [Organization Admins](/lang
 
 **When both RBAC and ABAC are enabled:**
 
-| RBAC Permits | Allow Policy Matches | Deny Policy Matches | Result |
+| RBAC permits | Allow policy matches | Deny policy matches | Result |
 |--------------|---------------------|---------------------|--------|
 | ✓ | ✓ | ✗ | **Allowed** |
 | ✓ | ✗ | ✗ | **Allowed** (RBAC fallback) |
