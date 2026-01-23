@@ -3,9 +3,76 @@ title: Trace with Google Gemini
 sidebarTitle: Google Gemini
 ---
 
-LangSmith supports tracing Google Gemini applications through the OpenTelemetry integration. This guide shows you how to capture traces automatically from your [Google Gemini](https://ai.google.dev/gemini-api/docs) applications and send them to LangSmith for monitoring and analysis.
+LangSmith supports tracing [Google Gemini](https://ai.google.dev/gemini-api/docs) applications using either OpenTelemetry or LangSmith’s lightweight `@traceable` API.
 
-## Installation
+This guide covers both approaches: a full [OpenTelemetry integration](#with-opentelemetry) for advanced observability, and a simpler [`@traceable`](#with-traceable)-based setup for quickly capturing model calls and metadata.
+
+
+## With `traceable`
+
+### Installation
+
+Install the required packages using your preferred package manager:
+
+<CodeGroup>
+
+```bash pip
+pip install langsmith google-genai
+```
+
+```bash uv
+uv add langsmith google-genai
+```
+
+</CodeGroup>
+
+### Setup
+
+Set your [API keys](/langsmith/create-account-api-key) and project name:
+
+```bash
+export LANGSMITH_API_KEY=<your_langsmith_api_key>
+export LANGSMITH_PROJECT=<your_project_name>
+export LANGSMITH_TRACING=true
+export GOOGLE_API_KEY=<your_google_api_key>
+```
+
+To create a Google API key, refer to [Google AI Studio](https://aistudio.google.com/apikey).
+
+### Configure tracing
+
+This example shows how to trace a Google Gemini model call in Python using LangSmith’s @[`traceable`][traceable] decorator. This approach requires minimal setup and is suited for capturing basic model inputs and outputs:
+
+```python
+from google import genai
+from langsmith import traceable, Client
+
+client = Client()
+
+@traceable(run_type="llm", name="gemini.generate_content", client=client)
+def call_gemini(prompt: str) -> str:
+    gemini = genai.Client()  # uses GOOGLE_API_KEY env var
+    resp = gemini.models.generate_content(
+        model="gemini-2.0-flash-exp",
+        contents=prompt,
+    )
+    return resp.text
+
+def main():
+    try:
+        print(call_gemini("Say hello in one short sentence."))
+    finally:
+        # Ensure traces are submitted before the process exits
+        client.flush()
+
+if __name__ == "__main__":
+    main()
+```
+
+
+## With OpenTelemetry
+
+### Installation
 
 Install the required packages using your preferred package manager:
 
@@ -29,9 +96,7 @@ Requires LangSmith Python SDK version `langsmith>=0.4.26` for optimal OpenTeleme
 This guide uses the newer [`google-genai`](https://docs.cloud.google.com/vertex-ai/generative-ai/docs/sdks/overview) package. If you're using the older `google-generativeai` package, please migrate to `google-genai` as the older package is deprecated.
 </Note>
 
-## Setup
-
-### 1. Set environment variables
+### Setup
 
 Set your [API keys](/langsmith/create-account-api-key) and project name:
 
@@ -43,8 +108,7 @@ export GOOGLE_API_KEY=<your_google_api_key>
 
 To create a Google API key, refer to [Google AI Studio](https://aistudio.google.com/apikey).
 
-
-### 2. Configure LangSmith tracing
+### Configure LangSmith tracing
 
 In your Google Gemini application, configure the LangSmith OpenTelemetry integration and instrument the Google GenAI SDK:
 
@@ -72,9 +136,9 @@ print(response.text)
 You do not need to set any OpenTelemetry environment variables or configure exporters manually—`configure()` handles everything automatically.
 </Note>
 
-## Advanced usage
+### Advanced usage
 
-### Add custom metadata and tags
+#### Add custom metadata and tags
 
 You can add custom metadata to your traces using OpenTelemetry span attributes:
 
@@ -104,7 +168,7 @@ with tracer.start_as_current_span("gemini_workflow") as span:
 
 For more details on the core LangSmith attributes, refer to the [Trace with OpenTelemetry](/langsmith/trace-with-opentelemetry#core-langsmith-attributes) page.
 
-### Start multi-turn conversations
+#### Start multi-turn conversations
 
 Trace multi-turn conversations with Gemini's chat interface. The [Google GenAI SDK](https://docs.cloud.google.com/vertex-ai/generative-ai/docs/sdks/overview) supports chat sessions, which maintain context across messages. Each message send will be captured as a traced operation:
 
