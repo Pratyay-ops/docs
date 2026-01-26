@@ -170,31 +170,43 @@ For more details on the core LangSmith attributes, refer to the [Trace with Open
 
 #### Start multi-turn conversations
 
-Trace multi-turn conversations with Gemini's chat interface. The [Google GenAI SDK](https://docs.cloud.google.com/vertex-ai/generative-ai/docs/sdks/overview) supports chat sessions, which maintain context across messages. Each message send will be captured as a traced operation:
+This example demonstrates a way to group multi-turn Gemini interactions into a single LangSmith thread by setting a shared `session_id` on a parent span. The [Google GenAI SDK](https://docs.cloud.google.com/vertex-ai/generative-ai/docs/sdks/overview) supports chat sessions, which maintain context across messages. Each message send will be captured as a traced operation:
 
 ```python
+import uuid
 from google import genai
-from google.genai import types
 from langsmith.integrations.otel import configure
 from openinference.instrumentation.google_genai import GoogleGenAIInstrumentor
+from opentelemetry import trace
 
 configure(project_name="gemini-chat")
 GoogleGenAIInstrumentor().instrument()
 
+tracer = trace.get_tracer(__name__)
 client = genai.Client()
 
-# Start a chat session
 chat = client.chats.create(model="gemini-2.0-flash-exp")
+thread_id = str(uuid.uuid4())
 
-# Send messages - each interaction will be traced
-response1 = chat.send_message("What are the main programming paradigms?")
-print(response1.text)
+with tracer.start_as_current_span("gemini.chat") as span:
+    # Attach thread metadata once, on the parent span
+    span.set_attribute("langsmith.metadata.session_id", thread_id)
 
-response2 = chat.send_message("Can you give examples of each?")
-print(response2.text)
+    response1 = chat.send_message("What are the main programming paradigms?")
+    print(response1.text)
+
+    response2 = chat.send_message("Can you give examples of each?")
+    print(response2.text)
+
+# Optional but recommended for short scripts
+trace.get_tracer_provider().force_flush()
 ```
 
 `client.chats.create()` starts a new chat session with the model, and subsequent `chat.send_message()` calls continue the conversation.
+
+<Note>
+For production or async applications, you may need to attach thread metadata to all spans created during a conversation. You can do this using a custom [`SpanProcessor` from the OpenTelemetry SDK](https://opentelemetry.io/docs/specs/otel/trace/sdk/#spanprocessor). LangSmith will automatically group runs into threads when the appropriate metadata is present.
+</Note>
 
 ## View traces in LangSmith
 
