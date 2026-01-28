@@ -4,7 +4,6 @@ import json
 import logging
 import re
 import shutil
-import sys
 from pathlib import Path
 
 import yaml
@@ -485,7 +484,6 @@ class DocumentationBuilder:
             desc="Building files",
             unit="file",
             bar_format="{l_bar}{bar}| {n_fmt}/{total_fmt} [{elapsed}<{remaining}]",
-            file=sys.stdout,
             dynamic_ncols=True,
         ) as pbar:
             for file_path in existing_files:
@@ -534,7 +532,6 @@ class DocumentationBuilder:
             desc=f"Building {output_dir} files",
             unit="file",
             bar_format="{l_bar}{bar}| {n_fmt}/{total_fmt} [{elapsed}<{remaining}]",
-            file=sys.stdout,
             dynamic_ncols=True,
         ) as pbar:
             for file_path in all_files:
@@ -612,7 +609,6 @@ class DocumentationBuilder:
             desc=f"Building {output_dir} files",
             unit="file",
             bar_format="{l_bar}{bar}| {n_fmt}/{total_fmt} [{elapsed}<{remaining}]",
-            file=sys.stdout,
             dynamic_ncols=True,
         ) as pbar:
             for file_path in all_files:
