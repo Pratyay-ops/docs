@@ -1010,6 +1010,7 @@
                     {
                       "group": "Data & privacy",
                       "pages": [
+                        "langsmith/conditional-tracing",
                         "langsmith/add-metadata-tags",
                         "langsmith/mask-inputs-outputs"
                       ]
