@@ -2,7 +2,7 @@
 title: LiteLLM
 ---
 
->[LiteLLM](https://github.com/BerriAI/litellm) is a library that simplifies calling Anthropic, Azure, Huggingface, Replicate, etc.
+>[LiteLLM](https://github.com/BerriAI/litellm) is a Ai gateway library that simplifies calling Openai, Anthropic, Azure, Huggingface, Replicate, etc.
 
 ## Installation and setup
 
@@ -26,6 +26,93 @@ from langchain_litellm import ChatLiteLLMRouter
 See more detail in the guide [here](/oss/integrations/chat/litellm).
 
 ---
+>[LiteLLM](https://github.com/BerriAI/litellm) with [ChatOpenAI](https://docs.langchain.com/oss/python/integrations/chat/openai) with via proxy server method
+
+By configuring `api_key`, `base_url`, and `extra_body`, LangChain can route requests through a LiteLLM proxy while preserving OpenAI compatibility.
+
+This is useful when:
+- Using self-hosted or vendor-hosted models behind LiteLLM
+- Centralizing model access through a LiteLLM gateway
+- Enforcing parameter validation and observability
+
+---
+
+## Prerequisites
+
+- A running LiteLLM proxy (local or hosted)
+- A model configured and exposed via LiteLLM
+- `langchain-openai` installed
+
+## Installation and setup
+
+<CodeGroup>
+```bash pip
+pip install -U langchain-openai
+```
+
+```bash uv
+uv add langchain-openai
+```
+</CodeGroup>
+
+Export Environment Variable
+```bash
+export LITELLM_API_KEY="your-litellm-api-key"
+export LITELLM_BASE_URL="http://localhost:4000"
+```
+
+## Basic Example
+
+```python
+from langchain_openai import ChatOpenAI
+
+llm = ChatOpenAI(
+    model="hosted-model-name",
+    api_key="your-litellm-api-key",
+    base_url="http://localhost:4000",
+    use_responses_api=False,
+    #model_kwargs={ applicable for reasoning models
+    #    "reasoning_effort": "medium", 
+    #    "extra_body": {
+    #        "allowed_openai_params": ["reasoning_effort"]
+    #    }, 
+    #},
+    model_kwargs={
+        "temperature": 0,
+        "extra_body": {
+            "allowed_openai_params": ["temperature"]
+        }
+    }
+)
+```
+
+Sending Messages
+```python
+messages = [
+    (
+        "system",
+        "You are a helpful assistant that translates English to French. "
+        "Translate the user sentence."
+    ),
+    ("human", "I love programming.")
+]
+
+response = llm.invoke(messages)
+print(response.content)
+```
+
+>Parameter Allowlisting (extra_body)
+
+LiteLLM performs strict validation on incoming OpenAI-style parameters.
+
+To avoid request failures, explicitly allow supported parameters:
+```python
+"extra_body": {
+    "allowed_openai_params": ["temperature"]
+}
+```
+
+---
 
 ## API reference
-For detailed documentation of all `ChatLiteLLM` and `ChatLiteLLMRouter` features and configurations head to the API reference: https://github.com/Akshay-Dongare/langchain-litellm
+For detailed documentation of all `ChatLiteLLM`,`Proxy Server` and `ChatLiteLLMRouter` features and configurations head to the API reference: https://github.com/Akshay-Dongare/langchain-litellm
