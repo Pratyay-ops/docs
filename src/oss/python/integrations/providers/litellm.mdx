@@ -26,7 +26,7 @@ from langchain_litellm import ChatLiteLLMRouter
 See more detail in the guide [here](/oss/integrations/chat/litellm).
 
 ---
->[LiteLLM](https://github.com/BerriAI/litellm) with [ChatOpenAI](https://docs.langchain.com/oss/python/integrations/chat/openai) with via proxy server method
+# [LiteLLM](https://github.com/BerriAI/litellm) with [ChatOpenAI](https://docs.langchain.com/oss/python/integrations/chat/openai) with via proxy server method
 
 By configuring `api_key`, `base_url`, and `extra_body`, LangChain can route requests through a LiteLLM proxy while preserving OpenAI compatibility.
 
@@ -35,7 +35,6 @@ This is useful when:
 - Centralizing model access through a LiteLLM gateway
 - Enforcing parameter validation and observability
 
----
 
 ## Prerequisites
 
@@ -47,7 +46,7 @@ This is useful when:
 
 <CodeGroup>
 ```bash pip
-pip install -U langchain-openai
+pip install langchain-openai
 ```
 
 ```bash uv
@@ -55,14 +54,13 @@ uv add langchain-openai
 ```
 </CodeGroup>
 
-Export Environment Variable
+##Export Environment Variable
 ```bash
 export LITELLM_API_KEY="your-litellm-api-key"
 export LITELLM_BASE_URL="http://localhost:4000"
 ```
 
 ## Basic Example
-
 ```python
 from langchain_openai import ChatOpenAI
 
@@ -71,7 +69,7 @@ llm = ChatOpenAI(
     api_key="your-litellm-api-key",
     base_url="http://localhost:4000",
     use_responses_api=False,
-    #model_kwargs={ applicable for reasoning models
+    #model_kwargs={    applicable for reasoning models
     #    "reasoning_effort": "medium", 
     #    "extra_body": {
     #        "allowed_openai_params": ["reasoning_effort"]
@@ -86,7 +84,7 @@ llm = ChatOpenAI(
 )
 ```
 
-Sending Messages
+## Sending Messages
 ```python
 messages = [
     (
@@ -101,7 +99,7 @@ response = llm.invoke(messages)
 print(response.content)
 ```
 
->Parameter Allowlisting (extra_body)
+## Parameter Allowlisting (extra_body)
 
 LiteLLM performs strict validation on incoming OpenAI-style parameters.
 
